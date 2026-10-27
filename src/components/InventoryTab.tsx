@@ -749,6 +749,60 @@ export default function InventoryTab({
     if (completeOrder) updates.is_ordered = false;
     await handleUpdateVirtualOrDb(med, updates);
   };
+    // --- Trasferimento tra piani ---
+  const [transferMed, setTransferMed] = useState<any | null>(null);
+  const [trFrom, setTrFrom] = useState('qty_pt');
+  const [trTo, setTrTo] = useState('qty_1');
+  const [trQty, setTrQty] = useState('1');
+  const [trError, setTrError] = useState('');
+
+  const FLOORS = [
+    ...(category === 'presidio' ? [{ key: 'qty_mc', label: 'Magazzino Centrale (MC)' }] : []),
+    { key: 'qty_pt', label: 'Piano Terra (PT)' },
+    { key: 'qty_1', label: 'Piano 1' },
+    { key: 'qty_2', label: 'Piano 2' },
+    { key: 'qty_3', label: 'Piano 3' },
+  ];
+
+  const transferLive = transferMed
+    ? (medications.find((m) => m.id === transferMed.id) || transferMed)
+    : null;
+
+  const openTransfer = (med: any) => {
+    const firstWithStock = FLOORS.find((f) => (med[f.key] || 0) > 0);
+    const from = firstWithStock ? firstWithStock.key : FLOORS[0].key;
+    const to = FLOORS.find((f) => f.key !== from)!.key;
+    setTrFrom(from);
+    setTrTo(to);
+    setTrQty('1');
+    setTrError('');
+    setTransferMed(med);
+  };
+
+  const handleTransfer = async () => {
+    if (!transferLive) return;
+    const n = parseInt(trQty, 10);
+    const available = transferLive[trFrom] || 0;
+    const fromLabel = FLOORS.find((f) => f.key === trFrom)?.label || '';
+
+    if (trFrom === trTo) { setTrError('Scegli due posti diversi.'); return; }
+    if (isNaN(n) || n < 1) { setTrError('Scrivi una quantità di almeno 1.'); return; }
+    if (n > available) { setTrError(`Su ${fromLabel} ci sono solo ${available} scatole.`); return; }
+
+    try {
+      setSaving(true);
+      await onUpdate(transferLive.id, {
+        [trFrom]: available - n,
+        [trTo]: (transferLive[trTo] || 0) + n,
+      });
+      setTransferMed(null);
+    } catch (err) {
+      console.error('Errore trasferimento:', err);
+      setTrError('Non riuscito. Riprova.');
+    } finally {
+      setSaving(false);
+    }
+  };
   const nameCol = category === 'farmaco' ? 'Principio Attivo' : 'Nome Presidio';
 
   return (
