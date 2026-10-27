@@ -1191,6 +1191,13 @@ export default function InventoryTab({
                             <div className="flex items-center justify-center gap-1">
                               {!med.isProntuarioVirtual && (
                                 <>
+                                                                  <button
+                                  onClick={() => openTransfer(med)}
+                                  className="p-1 rounded text-slate-400 hover:text-teal-600 hover:bg-slate-200 transition-colors"
+                                  title="Trasferisci tra piani"
+                                >
+                                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                                </button>
                                   <button
                                     onClick={() => handleProtectedAction(() => handleUpdateVirtualOrDb(med, { hidden: !med.hidden }))}
                                     className={`p-1 rounded transition-colors ${
