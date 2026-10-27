@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Plus, Trash2, X, EyeOff, Eye, AlertTriangle, Camera, Download, Filter, Clock, ArrowUpRight, ArrowDownRight, ArrowUpDown, ArrowUp, ArrowDown, Printer, ShoppingCart, CheckCircle2, Lock, Unlock } from 'lucide-react';
+import { Search, Plus, Trash2, X, EyeOff, Eye, AlertTriangle, Camera, Download, Filter, Clock, ArrowUpRight, ArrowDownRight, ArrowUpDown, ArrowUp, ArrowDown, Printer, ShoppingCart, CheckCircle2, Lock, Unlock, ArrowRightLeft } from 'lucide-react';
 import {
   totalQty,
   ITEM_TYPES,
