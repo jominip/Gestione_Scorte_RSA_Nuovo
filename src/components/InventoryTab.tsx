@@ -1432,7 +1432,78 @@ export default function InventoryTab({
           </div>
         </div>
       )}
+      {transferLive && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Trasferisci tra piani</h3>
+              <button
+                onClick={() => setTransferMed(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
+            <p className="text-sm font-semibold text-slate-800">
+              {transferLive.active_ingredient}{' '}
+              {transferLive.dosage && transferLive.dosage !== '—' ? transferLive.dosage : ''}
+            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Da</label>
+              <select
+                value={trFrom}
+                onChange={(e) => { setTrFrom(e.target.value); setTrError(''); }}
+                className="input text-xs cursor-pointer"
+              >
+                {FLOORS.map((f) => (
+                  <option key={f.key} value={f.key}>
+                    {f.label} - {transferLive[f.key] || 0} scatole
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">A</label>
+              <select
+                value={trTo}
+                onChange={(e) => { setTrTo(e.target.value); setTrError(''); }}
+                className="input text-xs cursor-pointer"
+              >
+                {FLOORS.map((f) => (
+                  <option key={f.key} value={f.key}>
+                    {f.label} - {transferLive[f.key] || 0} scatole
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Quante scatole</label>
+              <input
+                type="number"
+                min="1"
+                value={trQty}
+                onChange={(e) => { setTrQty(e.target.value); setTrError(''); }}
+                className="input text-xs"
+              />
+            </div>
+
+            {trError && <p className="text-xs font-semibold text-red-600">{trError}</p>}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setTransferMed(null)} className="btn-secondary text-xs">
+                Annulla
+              </button>
+              <button onClick={handleTransfer} disabled={saving} className="btn-primary text-xs">
+                {saving ? 'Salvataggio...' : 'Trasferisci'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
             <ScannerModal
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
