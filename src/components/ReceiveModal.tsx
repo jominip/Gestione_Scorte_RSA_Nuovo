@@ -65,6 +65,7 @@ const hasText = (v: any) => !!v && v !== '—';
 
 export default function ReceiveModal({ open, onClose, medications, category, onReceive }: Props) {
   const locations = LOCATIONS.filter((l) => !l.onlyPresidio || category === 'presidio');
+  const defaultField = category === 'presidio' ? 'qty_mc' : 'qty_pt';
 
   const [query, setQuery] = useState('');
   const [hint, setHint] = useState('');
@@ -72,7 +73,8 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
   const [scannerOpen, setScannerOpen] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
   const [qty, setQty] = useState('1');
-  const [field, setField] = useState(category === 'presidio' ? 'qty_mc' : 'qty_pt');
+  // quantità assegnata a ogni area, es. { qty_pt: 4, qty_1: 4, qty_2: 4 }
+  const [alloc, setAlloc] = useState<Record<string, number>>({});
   const [complete, setComplete] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +86,7 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
       setHint('');
       setShowAll(false);
       setSelected(null);
+      setAlloc({});
       setError(null);
       setDone(null);
     }
@@ -123,9 +126,37 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
     [medications]
   );
 
+  /* ---------- conti della divisione tra aree ---------- */
+
+  const arrived = parseInt(qty, 10) || 0;
+  const distributed = locations.reduce((s, l) => s + (alloc[l.field] || 0), 0);
+  const diff = arrived - distributed; // >0 mancano, <0 troppi, 0 tutto ok
+
+  const setArea = (field: string, value: number) => {
+    setAlloc((a) => ({ ...a, [field]: Math.max(0, value || 0) }));
+  };
+
+  // la quantità assegnata all'area si completa con quello che manca
+  const fillRest = (field: string) => {
+    const others = distributed - (alloc[field] || 0);
+    setArea(field, Math.max(0, arrived - others));
+  };
+
+  // se cambi la quantità arrivata e hai usato una sola area, la quantità la segue
+  const changeQty = (value: string) => {
+    setQty(value);
+    const n = parseInt(value, 10);
+    if (isNaN(n) || n < 1) return;
+    const active = locations.filter((l) => (alloc[l.field] || 0) > 0);
+    if (active.length <= 1) {
+      setAlloc({ [active[0]?.field ?? defaultField]: n });
+    }
+  };
+
   const pick = (m: any) => {
     setSelected(m);
     setQty('1');
+    setAlloc({ [defaultField]: 1 });
     setComplete(true);
     setError(null);
     setDone(null);
@@ -138,18 +169,57 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
       setError('Inserisci una quantità maggiore di zero.');
       return;
     }
+    const entries = locations
+      .map((l) => ({ field: l.field, short: l.short, value: alloc[l.field] || 0 }))
+      .filter((e) => e.value > 0);
+    const total = entries.reduce((s, e) => s + e.value, 0);
+    if (entries.length === 0 || total !== n) {
+      setError(`Le quantità nelle aree (${total}) devono essere uguali alla quantità arrivata (${n}).`);
+      return;
+    }
+
+    const savedFields: string[] = [];
+    let current = selected;
     try {
       setSaving(true);
       setError(null);
-      await onReceive(selected, n, field, selected.is_ordered ? complete : false);
-      const short = locations.find((l) => l.field === field)?.short ?? '';
-      setDone(`Registrato: +${n} ${selected.active_ingredient} (${short})`);
+      for (let i = 0; i < entries.length; i++) {
+        const e = entries[i];
+        const isLast = i === entries.length - 1;
+        // "In Ordine" si toglie solo con l'ultima area, quando tutto è stato salvato
+        await onReceive(current, e.value, e.field, selected.is_ordered ? complete && isLast : false);
+        savedFields.push(e.field);
+        current = { ...current, [e.field]: (Number(current[e.field]) || 0) + e.value };
+      }
+      const detail = entries.map((e) => `${e.short} +${e.value}`).join(', ');
+      setDone(`Registrato: ${selected.active_ingredient} (${detail})`);
       setSelected(null);
+      setAlloc({});
       setQuery('');
       setHint('');
-    } catch (e) {
-      console.error('Errore carico:', e);
-      setError('Salvataggio non riuscito. Riprova.');
+    } catch (err) {
+      console.error('Errore carico:', err);
+      if (savedFields.length > 0) {
+        // alcune aree sono già salvate: le tolgo dall'elenco per non caricarle due volte
+        const rest: Record<string, number> = {};
+        let restTotal = 0;
+        for (const e of entries) {
+          if (!savedFields.includes(e.field)) {
+            rest[e.field] = e.value;
+            restTotal += e.value;
+          }
+        }
+        setSelected(current);
+        setAlloc(rest);
+        setQty(String(restTotal));
+        const savedLabels = entries
+          .filter((e) => savedFields.includes(e.field))
+          .map((e) => `${e.short} +${e.value}`)
+          .join(', ');
+        setError(`Salvataggio non completato. Già salvato: ${savedLabels}. Qui sotto restano solo le aree da salvare: riprova.`);
+      } else {
+        setError('Salvataggio non riuscito. Riprova.');
+      }
     } finally {
       setSaving(false);
     }
@@ -279,11 +349,11 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-slate-700 mb-2">Quantità arrivata</p>
+                <p className="text-xs font-semibold text-slate-700 mb-2">Quantità arrivata (totale)</p>
                 <div className="flex items-center justify-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setQty(String(Math.max(1, (parseInt(qty, 10) || 1) - 1)))}
+                    onClick={() => changeQty(String(Math.max(1, (parseInt(qty, 10) || 1) - 1)))}
                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700 font-bold"
                   >
                     <Minus className="h-5 w-5" />
@@ -292,12 +362,12 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
                     type="number"
                     min="1"
                     value={qty}
-                    onChange={(e) => setQty(e.target.value)}
+                    onChange={(e) => changeQty(e.target.value)}
                     className="input w-24 text-center text-xl font-bold tabular-nums"
                   />
                   <button
                     type="button"
-                    onClick={() => setQty(String((parseInt(qty, 10) || 0) + 1))}
+                    onClick={() => changeQty(String((parseInt(qty, 10) || 0) + 1))}
                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 font-bold"
                   >
                     <Plus className="h-5 w-5" />
@@ -306,18 +376,62 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-slate-700 mb-1">Dove la metti?</p>
-                <select
-                  value={field}
-                  onChange={(e) => setField(e.target.value)}
-                  className="input text-sm cursor-pointer"
+                <p className="text-xs font-semibold text-slate-700 mb-2">Dove li metti? (puoi dividere tra più aree)</p>
+                <div className="space-y-2">
+                  {locations.map((l) => {
+                    const v = alloc[l.field] || 0;
+                    return (
+                      <div
+                        key={l.field}
+                        className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 ${
+                          v > 0 ? 'border-teal-300 bg-teal-50' : 'border-slate-200 bg-white'
+                        }`}
+                      >
+                        <span className="flex-1 min-w-0 text-sm font-medium text-slate-800 truncate">{l.label}</span>
+                        <button
+                          type="button"
+                          onClick={() => fillRest(l.field)}
+                          className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-semibold text-teal-700 hover:bg-white"
+                        >
+                          Resto
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setArea(l.field, v - 1)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-700"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={v > 0 ? v : ''}
+                          placeholder="0"
+                          onChange={(e) => setArea(l.field, parseInt(e.target.value, 10) || 0)}
+                          className="input w-14 text-center font-bold tabular-nums"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setArea(l.field, v + 1)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p
+                  className={`mt-2 text-xs font-semibold ${
+                    diff === 0 ? 'text-emerald-700' : diff > 0 ? 'text-amber-700' : 'text-red-700'
+                  }`}
                 >
-                  {locations.map((l) => (
-                    <option key={l.field} value={l.field}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
+                  {diff === 0
+                    ? `Tutto distribuito: ${distributed} di ${arrived}`
+                    : diff > 0
+                      ? `Distribuiti ${distributed} di ${arrived}: mancano ${diff}`
+                      : `Distribuiti ${distributed} di ${arrived}: ne hai messi ${-diff} in più`}
+                </p>
               </div>
 
               {selected.is_ordered && (
@@ -336,7 +450,11 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
                 <button onClick={() => setSelected(null)} disabled={saving} className="btn-secondary flex-1">
                   Indietro
                 </button>
-                <button onClick={confirm} disabled={saving} className="btn-primary flex-1">
+                <button
+                  onClick={confirm}
+                  disabled={saving || diff !== 0 || arrived < 1}
+                  className="btn-primary flex-1 disabled:opacity-50"
+                >
                   <Check className="h-4 w-4" />
                   {saving ? 'Salvataggio...' : 'Registra carico'}
                 </button>
