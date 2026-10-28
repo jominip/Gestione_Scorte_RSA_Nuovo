@@ -65,8 +65,7 @@ const hasText = (v: any) => !!v && v !== '—';
 
 export default function ReceiveModal({ open, onClose, medications, category, onReceive }: Props) {
   const locations = LOCATIONS.filter((l) => !l.onlyPresidio || category === 'presidio');
-  const defaultField = category === 'presidio' ? 'qty_mc' : 'qty_pt';
-
+ 
   const [query, setQuery] = useState('');
   const [hint, setHint] = useState('');
   const [showAll, setShowAll] = useState(false);
