@@ -408,7 +408,8 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
                           value={v > 0 ? v : ''}
                           placeholder="0"
                           onChange={(e) => setArea(l.field, parseInt(e.target.value, 10) || 0)}
-                          className="input w-14 text-center font-bold tabular-nums"
+                          className="input w-16 text-center font-bold tabular-nums"
+style={{ paddingLeft: 4, paddingRight: 4 }}
                         />
                         <button
                           type="button"
