@@ -154,7 +154,7 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
   const pick = (m: any) => {
     setSelected(m);
     setQty('1');
-    setAlloc({ [defaultField]: 1 });
+        setAlloc({});
     setComplete(true);
     setError(null);
     setDone(null);
