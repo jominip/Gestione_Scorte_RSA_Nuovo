@@ -142,14 +142,15 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
   };
 
   // se cambi la quantità arrivata e hai usato una sola area, la quantità la segue
-  const changeQty = (value: string) => {
+    const changeQty = (value: string) => {
     setQty(value);
     const n = parseInt(value, 10);
     if (isNaN(n) || n < 1) return;
     const active = locations.filter((l) => (alloc[l.field] || 0) > 0);
-       if (active.length === 1) {
+    if (active.length === 1) {
       setAlloc({ [active[0].field]: n });
     }
+  };
 
   const pick = (m: any) => {
     setSelected(m);
