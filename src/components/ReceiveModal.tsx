@@ -147,10 +147,9 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
     const n = parseInt(value, 10);
     if (isNaN(n) || n < 1) return;
     const active = locations.filter((l) => (alloc[l.field] || 0) > 0);
-    if (active.length <= 1) {
-      setAlloc({ [active[0]?.field ?? defaultField]: n });
+       if (active.length === 1) {
+      setAlloc({ [active[0].field]: n });
     }
-  };
 
   const pick = (m: any) => {
     setSelected(m);
