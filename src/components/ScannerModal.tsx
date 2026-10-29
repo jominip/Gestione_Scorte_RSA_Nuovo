@@ -180,10 +180,32 @@ function prettify(text: string) {
   return t;
 }
 
+const COMPANY =
+  /\b(?:s\.?p\.?a\.?|s\.?r\.?l\.?|titolare|prodotto|distribuito|confezionato|angelini|sanofi|zentiva|teva|sandoz|mylan|viatris|aurobindo|pfizer|bayer|gsk|glaxo|novartis|menarini|alfasigma|chiesi|recordati|abiogen|italfarmaco|almirall|takeda|merck|msd|krka|accord|hexal|ratiopharm|zambon|fidia|stada|germed|pensa|epifarma|ecupharma|neopharmed|dompe|dompé|laboratori|farmaceutici|pharma)\b/i;
+
+const DOSE_NEXT =
+  /\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|µg|ui|%)|compress|capsul|bustin|sciropp|gocce|fiale|supposte|crema|pomata|cerott|collirio|spray|soluzione|granulat/i;
+
+// riga con un principio attivo (parola tutta minuscola con desinenza tipica)
+const looksLikeInn = (raw: string) =>
+  raw
+    .split(/[^A-Za-zÀ-ÿ]+/)
+    .some((t) => t.length >= 5 && t === t.toLowerCase() && INN_SUFFIX.test(t) && !NOT_ACTIVE.test(t));
+
 /** Restituisce i nomi candidati ordinati per probabilità. */
 function rankNames(words: Word[], imgH: number): string[] {
+  const lines = groupLines(words);
+  const raws = lines.map((line) => {
+    const hs = line.map((w) => w.bbox.y1 - w.bbox.y0).sort((a, b) => a - b);
+    return {
+      raw: line.map((w) => w.text).join(' '),
+      cy: line.reduce((s, w) => s + (w.bbox.y0 + w.bbox.y1) / 2, 0) / line.length,
+      h: hs[Math.floor(hs.length / 2)],
+    };
+  });
+
   const scored: { text: string; score: number }[] = [];
-  for (const line of groupLines(words)) {
+  lines.forEach((line, idx) => {
     const stripped = line.map((w) => ({
       ...w,
       text: w.text
@@ -200,20 +222,37 @@ function rankNames(words: Word[], imgH: number): string[] {
         clean.push({ ...w, confidence: w.confidence ?? 80 });
       }
     });
-    if (clean.length === 0) continue;
+    if (clean.length === 0) return;
+
     const text = clean.map((w) => w.text).join(' ');
     const compact = text.replace(/\s/g, '');
     const letters = (compact.match(/[A-Za-zÀ-ÿ]/g) ?? []).length;
     const ratio = letters / Math.max(1, compact.length);
-    if (ratio < 0.7) continue;
+    if (ratio < 0.7) return;
+
     const heights = clean.map((w) => w.bbox.y1 - w.bbox.y0).sort((a, b) => a - b);
     const height = heights[Math.floor(heights.length / 2)];
     const conf = clean.reduce((s, w) => s + (w.confidence ?? 80), 0) / clean.length / 100;
     const yc = clean.reduce((s, w) => s + (w.bbox.y0 + w.bbox.y1) / 2, 0) / clean.length / imgH;
-    const score =
-      height * ratio * conf * (yc < 0.6 ? 1.15 : 1) * (clean.length > 4 ? 0.7 : 1);
+
+    let score = height * ratio * conf * (yc < 0.6 ? 1.15 : 1);
+    if (clean.length > 3) score *= 0.6; // frasi e slogan
+
+    const me = raws[idx];
+    if (/[®™]/.test(me.raw)) score *= 1.6; // i marchi hanno spesso ® o ™
+    if (COMPANY.test(me.raw)) score *= 0.2; // ditta produttrice
+
+    // il nome vero è seguito subito da dosaggio/forma o dal principio attivo
+    const next = raws
+      .filter((r) => r.cy > me.cy + me.h * 0.5)
+      .sort((a, b) => a.cy - b.cy)[0];
+    if (next && next.cy - me.cy < me.h * 3.5 && (DOSE_NEXT.test(next.raw) || looksLikeInn(next.raw))) {
+      score *= 1.7;
+    }
+
     scored.push({ text: prettify(text), score });
-  }
+  });
+
   scored.sort((a, b) => b.score - a.score);
   const seen = new Set<string>();
   return scored
@@ -311,6 +350,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
   const [result, setResult] = useState<string | null>(null);
   const [editableName, setEditableName] = useState('');
   const [editableActive, setEditableActive] = useState('');
+  const [focusField, setFocusField] = useState<'name' | 'active'>('name');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [details, setDetails] = useState<ScanDetails>({});
   const [scannedQty, setScannedQty] = useState<number>(1);
@@ -629,9 +669,10 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
       });
 
       const finalDetected = names[0] ?? '';
-      setSuggestions(names.slice(1, 4));
+      setSuggestions(names.slice(1, 8));
       setResult(finalDetected);
       setEditableName(finalDetected);
+      setFocusField('name');
       setEditableActive(findActiveIngredient(words, finalDetected, ret.data.text ?? '') ?? '');
       navigator.vibrate?.(40);
       stopCamera();
@@ -763,6 +804,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
                   placeholder="Scrivi il nome del farmaco"
                   className="input text-lg font-semibold bg-white"
                   autoFocus
+                  onFocus={() => setFocusField('name')}
                 />
               </div>
 
@@ -774,6 +816,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
                     value={editableActive}
                     onChange={(e) => setEditableActive(e.target.value)}
                     placeholder="Scrivi il principio attivo"
+                    onFocus={() => setFocusField('active')}
                     className="input font-semibold bg-white"
                   />
                   {!editableActive.trim() && (
@@ -786,13 +829,19 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
 
               {suggestions.length > 0 && (
                 <div>
-                  <p className="text-xs text-teal-700 mb-1">Altre letture possibili:</p>
+                  <p className="text-xs text-teal-700 mb-1">
+                    Altre scritte lette: tocca per usarle nel campo selezionato
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {suggestions.map((s) => (
                       <button
                         key={s}
                         type="button"
-                        onClick={() => setEditableName(s)}
+                        onClick={() =>
+                          focusField === 'active' && showActiveIngredient
+                            ? setEditableActive(s)
+                            : setEditableName(s)
+                        }
                         className="rounded-full border border-teal-300 bg-white px-3 py-1 text-sm text-teal-800"
                       >
                         {s}
