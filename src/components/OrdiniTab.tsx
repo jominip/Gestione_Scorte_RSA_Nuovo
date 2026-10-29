@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Download, Eye, EyeOff } from 'lucide-react';
+import { Search, Download, Eye, EyeOff, Pill } from 'lucide-react';
 import { totalQty, supabase, Medication } from '@/lib/supabase';
 import { exportOrderExcel } from '@/lib/excel';
+import { isAntibiotic } from '@/lib/antibiotics';
 
 type Props = {
   medications: Medication[];
@@ -11,6 +12,7 @@ type Props = {
 export default function OrdiniTab({ medications, onMedicationUpdated }: Props) {
   const [search, setSearch] = useState('');
   const [showOnlyToOrder, setShowOnlyToOrder] = useState(true);
+  const [showAntibioticOnly, setShowAntibioticOnly] = useState(false);
 const [saveError, setSaveError] = useState<string | null>(null);
   // Stato locale blindato per preservare i numeri digitati senza reset improvvisi
   const [orderState, setOrderState] = useState<{
@@ -64,6 +66,7 @@ const [saveError, setSaveError] = useState<string | null>(null);
     
     return processedItems.filter((item) => {
       if (item.hidden) return false;
+      if (showAntibioticOnly && !isAntibiotic(item)) return false;
 
       if (q) {
         return (
@@ -77,7 +80,7 @@ const [saveError, setSaveError] = useState<string | null>(null);
 
       return true;
     });
-  }, [processedItems, search, showOnlyToOrder]);
+  }, [processedItems, search, showOnlyToOrder, showAntibioticOnly]);
 
   const farmaciList = useMemo(() => filteredItems.filter((i) => i.category === 'farmaco'), [filteredItems]);
   const presidiList = useMemo(() => filteredItems.filter((i) => i.category === 'presidio'), [filteredItems]);
@@ -588,6 +591,14 @@ const [saveError, setSaveError] = useState<string | null>(null);
               className="input pl-9 text-xs"
             />
           </div>
+          <button
+            onClick={() => setShowAntibioticOnly((v) => !v)}
+            className={`btn-secondary text-xs !py-2 whitespace-nowrap ${showAntibioticOnly ? 'bg-sky-50 border-sky-300 text-sky-700' : ''}`}
+            aria-pressed={showAntibioticOnly}
+          >
+            <Pill className="h-3.5 w-3.5" />
+            Solo Antibiotici
+          </button>
 {saveError && (
   <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-3">
     <p className="text-sm text-red-700 flex-1">{saveError}</p>

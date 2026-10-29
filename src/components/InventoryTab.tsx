@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, Plus, Trash2, X, EyeOff, Eye, AlertTriangle, Camera, Download, Filter, Clock, ArrowUpRight, ArrowDownRight, ArrowUpDown, ArrowUp, ArrowDown, Printer, ShoppingCart, CheckCircle2, Lock, Unlock, ArrowRightLeft } from 'lucide-react';
+import { Search, Plus, Trash2, X, EyeOff, Eye, AlertTriangle, Camera, Download, Filter, Clock, ArrowUpRight, ArrowDownRight, ArrowUpDown, ArrowUp, ArrowDown, Printer, ShoppingCart, CheckCircle2, Lock, Unlock, ArrowRightLeft, Pill } from 'lucide-react';
 import {
   totalQty,
   ITEM_TYPES,
   isBelowThreshold,
 } from '@/lib/supabase';
 import { exportMedicationsExcel } from '@/lib/excel';
+import { isAntibiotic } from '@/lib/antibiotics';
 import ScannerModal from '@/components/ScannerModal';
 import ReceiveModal from '@/components/ReceiveModal';
 
@@ -421,6 +422,7 @@ export default function InventoryTab({
   const [search, setSearch] = useState('');
   const [showHidden, setShowHidden] = useState(false);
   const [showLowOnly, setShowLowOnly] = useState(false);
+  const [showAntibioticOnly, setShowAntibioticOnly] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [floorFilter, setFloorFilter] = useState<string>('all');
@@ -592,6 +594,7 @@ export default function InventoryTab({
       const isLow = isBelowThreshold(m);
 
       if (showLowOnly && !isLow) return false;
+      if (showAntibioticOnly && !isAntibiotic(m)) return false;
 
       if (floorFilter === 'mc' && (m.qty_mc || 0) <= 0) return false;
       if (floorFilter === 'pt' && (m.qty_pt || 0) <= 0) return false;
@@ -616,7 +619,7 @@ export default function InventoryTab({
     }
 
     return result;
-  }, [fullList, search, showHidden, showLowOnly, floorFilter, totSortOrder]);
+  }, [fullList, search, showHidden, showLowOnly, showAntibioticOnly, floorFilter, totSortOrder]);
 
   const handleToggleTotSort = () => {
     setTotSortOrder((prev) => {
@@ -890,6 +893,16 @@ export default function InventoryTab({
           >
             <AlertTriangle className="h-4 w-4" />
             <span className="hidden sm:inline">Sotto Soglia</span>
+          </button>
+          <button
+            onClick={() => setShowAntibioticOnly((v) => !v)}
+            className={`btn-secondary whitespace-nowrap ${
+              showAntibioticOnly ? 'bg-sky-50 border-sky-300 text-sky-700' : ''
+            }`}
+            aria-pressed={showAntibioticOnly}
+          >
+            <Pill className="h-4 w-4" />
+            <span className="hidden sm:inline">Solo Antibiotici</span>
           </button>
           <button
             onClick={() => setShowHidden((v) => !v)}
