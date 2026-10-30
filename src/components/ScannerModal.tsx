@@ -181,7 +181,7 @@ function prettify(text: string) {
 }
 
 const COMPANY =
-  /\b(?:s\.?p\.?a\.?|s\.?r\.?l\.?|titolare|prodotto|distribuito|confezionato|angelini|sanofi|zentiva|teva|sandoz|mylan|viatris|aurobindo|pfizer|bayer|gsk|glaxo|novartis|menarini|alfasigma|chiesi|recordati|abiogen|italfarmaco|almirall|takeda|merck|msd|krka|accord|hexal|ratiopharm|zambon|fidia|stada|germed|pensa|epifarma|ecupharma|neopharmed|dompe|dompé|laboratori|farmaceutici|pharma)\b/i;
+  /\b(?:s\.?p\.?a\.?|s\.?r\.?l\.?|titolare|prodotto|distribuito|confezionato|angelini|sanofi|zentiva|teva|sandoz|mylan|viatris|aurobindo|pfizer|bayer|gsk|glaxo|novartis|menarini|alfasigma|chiesi|recordati|abiogen|italfarmaco|almirall|takeda|merck|msd|krka|accord|hexal|ratiopharm|zambon|fidia|stada|germed|pensa|epifarma|ecupharma|neopharmed|dompe|dompé|vemedia|ibsa|molteni|montefarmaco|haleon|reckitt|perrigo|opella|laboratori|farmaceutici|pharma)\b/i;
 
 const DOSE_NEXT =
   /\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|µg|ui|%)|compress|capsul|bustin|sciropp|gocce|fiale|supposte|crema|pomata|cerott|collirio|spray|soluzione|granulat/i;
@@ -237,6 +237,7 @@ function rankNames(words: Word[], imgH: number): string[] {
 
     let score = height * ratio * conf * (yc < 0.6 ? 1.15 : 1);
     if (clean.length > 3) score *= 0.6; // frasi e slogan
+    if (compact.length <= 3) score *= 0.25; // pezzi di logo letti male (es. "IO")
 
     const me = raws[idx];
     if (/[®™]/.test(me.raw)) score *= 1.6; // i marchi hanno spesso ® o ™
@@ -296,25 +297,25 @@ function findActiveIngredient(words: Word[], name: string, fullText: string): st
           .sort((a, b) => b.h - a.h)[0]
       : undefined;
 
-  let best: { value: string; score: number } | undefined;
+  const cands: { value: string; score: number; cy: number; h: number }[] = [];
   for (const l of lines) {
     if (l === nameLine) continue;
     const stripped = l.text
       .replace(/\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|µg|ui|%)/gi, ' ')
       .replace(/[®™]/g, ' ');
     if (/\d/.test(stripped)) continue;
-    const tokens = stripped.replace(/[^A-Za-zÀ-ÿ\/\-\s]/g, ' ').split(/\s+/).filter(Boolean);
+    const tokens = stripped.replace(/[^A-Za-zÀ-ÿ,\/\-\s]/g, ' ').split(/\s+/).filter(Boolean);
     if (tokens.length === 0 || tokens.length > 6) continue;
-    const parts = tokens.flatMap((t) => t.split('/')).filter(Boolean);
+    const parts = tokens.flatMap((t) => t.split(/[\/,]/)).filter(Boolean);
     const content = parts.filter((p) => p.length >= 3 && !NOT_ACTIVE.test(p) && !CONNECTORS.test(p));
     const innHits = content.filter((p) => p.length >= 5 && INN_SUFFIX.test(p)).length;
     if (innHits === 0) continue;
     if (content.length < parts.length * 0.6) continue;
 
     const value = tokens
-      .filter((t) => !NOT_ACTIVE.test(t))
+      .filter((t) => !NOT_ACTIVE.test(t.replace(/[,\/\-]+$/, '')))
       .join(' ')
-      .replace(/^[\/\-\s]+|[\/\-\s]+$/g, '')
+      .replace(/^[\/,\-\s]+|[\/,\-\s]+$/g, '')
       .toLowerCase();
     if (value.length < 5) continue;
 
@@ -324,9 +325,19 @@ function findActiveIngredient(words: Word[], name: string, fullText: string): st
       if (dy > 0 && dy < nameLine.h * 6) score += 3;
       if (l.h <= nameLine.h) score += 1;
     }
-    if (!best || score > best.score) best = { value, score };
+    cands.push({ value, score, cy: l.cy, h: l.h });
   }
-  if (best) return cap(best.value);
+
+  if (cands.length) {
+    cands.sort((a, b) => b.score - a.score);
+    const best = cands[0];
+    // unisce le righe vicine dello stesso elenco ("Alcool benzilico," + "benzocaina, cloroxilenolo")
+    const group = cands
+      .filter((c) => Math.abs(c.cy - best.cy) <= best.h * 2.6)
+      .sort((a, b) => a.cy - b.cy)
+      .slice(0, 3);
+    return cap(group.map((c) => c.value.replace(/,+$/, '')).join(', '));
+  }
 
   // ripiego: "Principio attivo: paracetamolo" / "Ogni compressa contiene: ..."
   const m = fullText.match(
