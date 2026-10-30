@@ -186,6 +186,10 @@ const COMPANY =
 const DOSE_NEXT =
   /\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|µg|ui|%)|compress|capsul|bustin|sciropp|gocce|fiale|supposte|crema|pomata|cerott|collirio|spray|soluzione|granulat/i;
 
+// righe fatte solo di forma/via di somministrazione (es. "1% crema", "Tubo topico") non sono nomi
+const FORM_ONLY =
+  /^(?:crema|pomata|unguento|gel|spray|gocce|fiale?|bustine?|supposte?|collirio|cerotti?|tubo|topico|cutaneo|vaginale|nasale|rettale|oftalmico|auricolare)$/i;
+
 // riga con un principio attivo (parola tutta minuscola con desinenza tipica)
 const looksLikeInn = (raw: string) =>
   raw
@@ -223,6 +227,7 @@ function rankNames(words: Word[], imgH: number): string[] {
       }
     });
     if (clean.length === 0) return;
+    if (clean.every((w) => FORM_ONLY.test(w.text))) return;
 
     const text = clean.map((w) => w.text).join(' ');
     const compact = text.replace(/\s/g, '');
@@ -347,6 +352,32 @@ function findActiveIngredient(words: Word[], name: string, fullText: string): st
   return undefined;
 }
 
+/** Mette per prime le scritte che sembrano principi attivi (parola lunga con desinenza tipica). */
+function sortActiveFirst(list: string[]): string[] {
+  const has = (t: string) =>
+    t.split(/[^A-Za-zÀ-ÿ]+/).some((w) => w.length >= 5 && INN_SUFFIX.test(w) && !NOT_ACTIVE.test(w));
+  return [...list].sort((a, b) => Number(has(b)) - Number(has(a)));
+}
+
+/** Aggiunge una sostanza all'elenco già scritto ("alcool benzilico, benzocaina"). */
+function appendActive(current: string, add: string): string {
+  const cur = current.trim().replace(/[,\s]+$/, '');
+  if (!cur) return add;
+  if (cur.toLowerCase().includes(add.toLowerCase())) return cur;
+  return `${cur}, ${add.toLowerCase()}`;
+}
+
+/** La scritta scelta come nome assomiglia a un principio attivo (es. "Sulfadiazina Argentica Micronizzata")? */
+function nameLooksLikeActive(text: string): boolean {
+  if (/[®™]/.test(text) || COMPANY.test(text)) return false;
+  const tokens = text
+    .split(/\s+/)
+    .map((t) => t.replace(/[^A-Za-zÀ-ÿ]/g, ''))
+    .filter((t) => t.length >= 4 && !CONNECTORS.test(t) && !NOT_ACTIVE.test(t));
+  const innHits = tokens.filter((t) => t.length >= 5 && INN_SUFFIX.test(t)).length;
+  return tokens.length >= 2 && innHits >= 1;
+}
+
 /* ---------------------------------- component -------------------------------- */
 
 export default function ScannerModal({ open, onClose, onConfirm, mode = 'search', itemFound, showActiveIngredient = true }: Props) {
@@ -361,7 +392,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
   const [result, setResult] = useState<string | null>(null);
   const [editableName, setEditableName] = useState('');
   const [editableActive, setEditableActive] = useState('');
-  const [focusField, setFocusField] = useState<'name' | 'active'>('name');
+  const [nameWarn, setNameWarn] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [details, setDetails] = useState<ScanDetails>({});
   const [scannedQty, setScannedQty] = useState<number>(1);
@@ -445,6 +476,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
       setResult(null);
       setEditableName('');
       setEditableActive('');
+      setNameWarn(false);
       setSuggestions([]);
       setDetails({});
       setScannedQty(1);
@@ -680,11 +712,13 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
       });
 
       const finalDetected = names[0] ?? '';
-      setSuggestions(names.slice(1, 8));
+      const activeFound = findActiveIngredient(words, finalDetected, ret.data.text ?? '');
+      const looksActive = showActiveIngredient && !activeFound && nameLooksLikeActive(finalDetected);
+      setSuggestions(sortActiveFirst(names.slice(0, 8)));
       setResult(finalDetected);
-      setEditableName(finalDetected);
-      setFocusField('name');
-      setEditableActive(findActiveIngredient(words, finalDetected, ret.data.text ?? '') ?? '');
+      setEditableName(looksActive ? '' : finalDetected);
+      setEditableActive(activeFound ?? (looksActive ? finalDetected : ''));
+      setNameWarn(looksActive);
       navigator.vibrate?.(40);
       stopCamera();
     } catch (err) {
@@ -695,7 +729,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
   };
 
   const handleConfirm = () => {
-    if (editableName.trim()) {
+    if (editableName.trim() || (showActiveIngredient && editableActive.trim())) {
       const cleanDetails = Object.fromEntries(
         Object.entries(details).filter(([, v]) => v !== undefined)
       ) as ScanDetails;
@@ -713,6 +747,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
     setResult(null);
     setEditableName('');
     setEditableActive('');
+    setNameWarn(false);
     setSuggestions([]);
     setDetails({});
     setScannedQty(1);
@@ -731,7 +766,7 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-      <div className="card w-full max-w-lg p-6 animate-slide-in">
+      <div className="card w-full max-w-lg p-6 animate-slide-in max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900">
             {mode === 'count' ? 'Conteggio Rapido da Scanner' : 'Scanner Confezione'}
@@ -806,19 +841,6 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
         {result !== null && (
           <div className="space-y-4">
             <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 space-y-3">
-              <div>
-                <p className="text-xs text-teal-600 font-medium mb-1">Nome rilevato dalla scatola:</p>
-                <input
-                  type="text"
-                  value={editableName}
-                  onChange={(e) => setEditableName(e.target.value)}
-                  placeholder="Scrivi il nome del farmaco"
-                  className="input text-lg font-semibold bg-white"
-                  autoFocus
-                  onFocus={() => setFocusField('name')}
-                />
-              </div>
-
               {showActiveIngredient && (
                 <div>
                   <p className="text-xs text-teal-600 font-medium mb-1">Principio attivo:</p>
@@ -826,37 +848,76 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
                     type="text"
                     value={editableActive}
                     onChange={(e) => setEditableActive(e.target.value)}
-                    placeholder="Scrivi il principio attivo"
-                    onFocus={() => setFocusField('active')}
-                    className="input font-semibold bg-white"
+                    placeholder="Scegli tra le scritte lette o scrivilo"
+                    className="input text-lg font-semibold bg-white"
                   />
                   {!editableActive.trim() && (
                     <p className="mt-1 text-[11px] text-teal-700">
-                      Non rilevato dalla scatola: puoi scriverlo qui o nel modulo.
+                      Non rilevato: scegli una delle scritte qui sotto oppure scrivilo.
                     </p>
                   )}
                 </div>
               )}
 
+              <div>
+                <p className="text-xs text-teal-600 font-medium mb-1">
+                  {showActiveIngredient ? 'Nome commerciale (se letto):' : 'Nome rilevato dalla scatola:'}
+                </p>
+                <input
+                  type="text"
+                  value={editableName}
+                  onChange={(e) => {
+                    setEditableName(e.target.value);
+                    setNameWarn(false);
+                  }}
+                  placeholder={showActiveIngredient ? 'Scrivilo qui se serve' : 'Scrivi il nome del farmaco'}
+                  className="input font-semibold bg-white"
+                />
+                {nameWarn && !editableName.trim() && (
+                  <p className="mt-1 text-[11px] text-amber-700">
+                    Il nome commerciale non è stato letto (può essere un logo). Scrivilo qui se ti serve.
+                  </p>
+                )}
+              </div>
+
               {suggestions.length > 0 && (
                 <div>
-                  <p className="text-xs text-teal-700 mb-1">
-                    Altre scritte lette: tocca per usarle nel campo selezionato
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs text-teal-700 mb-1">Scritte lette sulla scatola: scegli dove usarle</p>
+                  <div className="space-y-1.5">
                     {suggestions.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() =>
-                          focusField === 'active' && showActiveIngredient
-                            ? setEditableActive(s)
-                            : setEditableName(s)
-                        }
-                        className="rounded-full border border-teal-300 bg-white px-3 py-1 text-sm text-teal-800"
-                      >
-                        {s}
-                      </button>
+                      <div key={s} className="rounded-xl border border-teal-200 bg-white px-3 py-2">
+                        <p className="text-sm font-medium text-slate-800 break-words">{s}</p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {showActiveIngredient && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setEditableActive(s)}
+                                className="rounded-full border border-teal-600 bg-teal-600 px-2.5 py-1 text-xs font-semibold text-white"
+                              >
+                                Principio attivo
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditableActive((cur) => appendActive(cur, s))}
+                                className="rounded-full border border-teal-300 bg-white px-2.5 py-1 text-xs font-semibold text-teal-800"
+                              >
+                                + Aggiungi
+                              </button>
+                            </>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditableName(s);
+                              setNameWarn(false);
+                            }}
+                            className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+                          >
+                            Nome
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -909,11 +970,11 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={!editableName.trim()}
+                disabled={!(editableName.trim() || (showActiveIngredient && editableActive.trim()))}
                 className="btn-primary flex-1"
               >
                 <Check className="h-4 w-4" />
-                {mode === 'count' ? 'Registra nel Piano' : 'Conferma Nome'}
+                {mode === 'count' ? 'Registra nel Piano' : 'Conferma'}
               </button>
             </div>
           </div>
