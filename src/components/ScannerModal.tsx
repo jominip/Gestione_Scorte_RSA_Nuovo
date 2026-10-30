@@ -148,7 +148,11 @@ function groupLines(words: Word[]): Word[][] {
     if (last) {
       const avgCy = last.reduce((s, x) => s + cy(x), 0) / last.length;
       const avgH = last.reduce((s, x) => s + hh(x), 0) / last.length;
-      if (Math.abs(cy(w) - avgCy) < Math.max(avgH, hh(w)) * 0.5) {
+      const ratio = hh(w) / avgH;
+      if (
+        Math.abs(cy(w) - avgCy) < Math.max(avgH, hh(w)) * 0.5 &&
+        (w.text.length <= 2 || (ratio >= 0.5 && ratio <= 2))
+      ) {
         last.push(w);
         continue;
       }
@@ -367,15 +371,103 @@ function appendActive(current: string, add: string): string {
   return `${cur}, ${add.toLowerCase()}`;
 }
 
-/** La scritta scelta come nome assomiglia a un principio attivo (es. "Sulfadiazina Argentica Micronizzata")? */
-function nameLooksLikeActive(text: string): boolean {
-  if (/[®™]/.test(text) || COMPANY.test(text)) return false;
-  const tokens = text
-    .split(/\s+/)
-    .map((t) => t.replace(/[^A-Za-zÀ-ÿ]/g, ''))
-    .filter((t) => t.length >= 4 && !CONNECTORS.test(t) && !NOT_ACTIVE.test(t));
-  const innHits = tokens.filter((t) => t.length >= 5 && INN_SUFFIX.test(t)).length;
-  return tokens.length >= 2 && innHits >= 1;
+type Opt = { text: string; uncertain?: boolean };
+
+const DOSE_G =
+  /\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|µg|ui|%)(?![A-Za-zÀ-ÿ])(?:\s*\/\s*\d+(?:[.,]\d+)?\s*(?:mg|g|ml|mcg|µg|ui|%)(?![A-Za-zÀ-ÿ]))?/gi;
+
+/** Righe lette con poca sicurezza (es. loghi): si mostrano come "incerte", da controllare. */
+function looseLines(words: Word[], taken: string[]): string[] {
+  const out: string[] = [];
+  const takenKeys = new Set(taken.map((t) => t.toLowerCase()));
+  for (const line of groupLines(words.filter((w) => (w.confidence ?? 0) >= 25))) {
+    const text = line
+      .map((w) => w.text)
+      .join(' ')
+      .replace(/[^A-Za-zÀ-ÿ'\- ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!text.split(' ').some((w) => w.length >= 4)) continue;
+    const meaningful = text
+      .split(' ')
+      .filter(
+        (w) =>
+          w.length >= 3 &&
+          !FORM_ONLY.test(w) &&
+          !NOT_ACTIVE.test(w) &&
+          !CONNECTORS.test(w) &&
+          !JUNK_PATTERNS.some((p) => p.test(w))
+      );
+    if (meaningful.length === 0) continue;
+    if ((text.match(/[A-Za-zÀ-ÿ]/g) ?? []).length < 5) continue;
+    const t = prettify(text);
+    const k = t.toLowerCase();
+    if (COMPANY.test(t) || takenKeys.has(k)) continue;
+    takenKeys.add(k);
+    out.push(t);
+  }
+  return out.slice(0, 4);
+}
+
+/** Costruisce gli elenchi da cui scegliere, uno per casella. */
+function buildOptions(words: Word[], names: string[], activeFound: string | undefined, fullText: string) {
+  const dedupe = (list: Opt[]) => {
+    const seen = new Set<string>();
+    return list.filter((o) => {
+      const k = o.text.toLowerCase();
+      if (!k || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  };
+  const strict = names
+    .filter((n) => !COMPANY.test(n) && n.replace(/[^A-Za-zÀ-ÿ]/g, '').length >= 4)
+    .slice(0, 10);
+  const loose: Opt[] = looseLines(words, strict).map((text) => ({ text, uncertain: true }));
+  const activeOptions = dedupe([
+    ...(activeFound ? [{ text: activeFound }] : []),
+    ...sortActiveFirst(strict).map((text) => ({ text })),
+    ...loose,
+  ]).slice(0, 9);
+  const nameOptions = dedupe([...strict.map((text) => ({ text })), ...loose]).slice(0, 9);
+  const dosageOptions = Array.from(
+    new Set(Array.from(fullText.matchAll(DOSE_G)).map((m) => m[0].replace(/\s+/g, '')))
+  ).slice(0, 5);
+  return { activeOptions, nameOptions, dosageOptions };
+}
+
+/** Elenco di scritte da toccare per riempire una casella. */
+function Chips({
+  options,
+  onPick,
+  isSelected,
+}: {
+  options: Opt[];
+  onPick: (t: string) => void;
+  isSelected: (t: string) => boolean;
+}) {
+  if (options.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {options.map((o) => (
+        <button
+          key={o.text}
+          type="button"
+          onClick={() => onPick(o.text)}
+          className={`rounded-full border px-2.5 py-1 text-left text-xs font-semibold break-words ${
+            isSelected(o.text)
+              ? 'border-teal-600 bg-teal-600 text-white'
+              : o.uncertain
+                ? 'border-dashed border-slate-400 bg-white text-slate-500'
+                : 'border-teal-300 bg-white text-teal-800'
+          }`}
+        >
+          {o.text}
+          {o.uncertain ? ' (incerta)' : ''}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /* ---------------------------------- component -------------------------------- */
@@ -392,8 +484,10 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
   const [result, setResult] = useState<string | null>(null);
   const [editableName, setEditableName] = useState('');
   const [editableActive, setEditableActive] = useState('');
-  const [nameWarn, setNameWarn] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [activeOptions, setActiveOptions] = useState<Opt[]>([]);
+  const [nameOptions, setNameOptions] = useState<Opt[]>([]);
+  const [dosageOptions, setDosageOptions] = useState<string[]>([]);
+  const [editableDosage, setEditableDosage] = useState('');
   const [details, setDetails] = useState<ScanDetails>({});
   const [scannedQty, setScannedQty] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
@@ -476,8 +570,10 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
       setResult(null);
       setEditableName('');
       setEditableActive('');
-      setNameWarn(false);
-      setSuggestions([]);
+      setActiveOptions([]);
+      setNameOptions([]);
+      setDosageOptions([]);
+      setEditableDosage('');
       setDetails({});
       setScannedQty(1);
       setBarcode(null);
@@ -712,13 +808,16 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
       });
 
       const finalDetected = names[0] ?? '';
+      const fullText = words.map((w) => w.text).join(' ') + ' ' + (ret.data.text ?? '');
       const activeFound = findActiveIngredient(words, finalDetected, ret.data.text ?? '');
-      const looksActive = showActiveIngredient && !activeFound && nameLooksLikeActive(finalDetected);
-      setSuggestions(sortActiveFirst(names.slice(0, 8)));
+      const opts = buildOptions(words, names, activeFound, fullText);
+      setActiveOptions(opts.activeOptions);
+      setNameOptions(opts.nameOptions);
+      setDosageOptions(opts.dosageOptions);
       setResult(finalDetected);
-      setEditableName(looksActive ? '' : finalDetected);
-      setEditableActive(activeFound ?? (looksActive ? finalDetected : ''));
-      setNameWarn(looksActive);
+      setEditableName('');
+      setEditableActive('');
+      setEditableDosage(parsed.dosage ? parsed.dosage.replace(/\s+/g, '') : '');
       navigator.vibrate?.(40);
       stopCamera();
     } catch (err) {
@@ -734,11 +833,13 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
         Object.entries(details).filter(([, v]) => v !== undefined)
       ) as ScanDetails;
       const active = editableActive.trim();
-      onConfirm(
-        editableName.trim(),
-        scannedQty,
-        active ? { ...cleanDetails, activeIngredient: active } : cleanDetails
-      );
+      const dosage = editableDosage.trim();
+      const { dosage: _scanned, ...rest } = cleanDetails;
+      onConfirm(editableName.trim(), scannedQty, {
+        ...rest,
+        ...(active ? { activeIngredient: active } : {}),
+        ...(dosage ? { dosage } : {}),
+      });
       onClose();
     }
   };
@@ -747,8 +848,10 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
     setResult(null);
     setEditableName('');
     setEditableActive('');
-    setNameWarn(false);
-    setSuggestions([]);
+    setActiveOptions([]);
+    setNameOptions([]);
+    setDosageOptions([]);
+    setEditableDosage('');
     setDetails({});
     setScannedQty(1);
     setBarcode(null);
@@ -759,7 +862,6 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
   if (!open) return null;
 
   const chips = [
-    details.dosage && ['Dosaggio', details.dosage],
     details.form && ['Forma', details.form],
     details.aic && ['AIC', details.aic],
   ].filter(Boolean) as [string, string][];
@@ -840,86 +942,69 @@ export default function ScannerModal({ open, onClose, onConfirm, mode = 'search'
 
         {result !== null && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 space-y-3">
+            <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 space-y-4">
               {showActiveIngredient && (
                 <div>
-                  <p className="text-xs text-teal-600 font-medium mb-1">Principio attivo:</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-teal-600 font-medium mb-1">Principio attivo:</p>
+                    {editableActive && (
+                      <button
+                        type="button"
+                        onClick={() => setEditableActive('')}
+                        className="text-[11px] font-semibold text-slate-500 underline"
+                      >
+                        Svuota
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={editableActive}
                     onChange={(e) => setEditableActive(e.target.value)}
-                    placeholder="Scegli tra le scritte lette o scrivilo"
-                    className="input text-lg font-semibold bg-white"
+                    placeholder="Tocca una scritta qui sotto o scrivilo"
+                    className="input font-semibold bg-white"
                   />
-                  {!editableActive.trim() && (
-                    <p className="mt-1 text-[11px] text-teal-700">
-                      Non rilevato: scegli una delle scritte qui sotto oppure scrivilo.
-                    </p>
-                  )}
+                  <Chips
+                    options={activeOptions}
+                    onPick={(t) => setEditableActive((cur) => appendActive(cur, t))}
+                    isSelected={(t) => !!editableActive && editableActive.toLowerCase().includes(t.toLowerCase())}
+                  />
                 </div>
               )}
 
               <div>
                 <p className="text-xs text-teal-600 font-medium mb-1">
-                  {showActiveIngredient ? 'Nome commerciale (se letto):' : 'Nome rilevato dalla scatola:'}
+                  {showActiveIngredient ? 'Nome commerciale:' : 'Nome rilevato dalla scatola:'}
                 </p>
                 <input
                   type="text"
                   value={editableName}
-                  onChange={(e) => {
-                    setEditableName(e.target.value);
-                    setNameWarn(false);
-                  }}
-                  placeholder={showActiveIngredient ? 'Scrivilo qui se serve' : 'Scrivi il nome del farmaco'}
+                  onChange={(e) => setEditableName(e.target.value)}
+                  placeholder="Tocca una scritta qui sotto o scrivilo"
                   className="input font-semibold bg-white"
                 />
-                {nameWarn && !editableName.trim() && (
-                  <p className="mt-1 text-[11px] text-amber-700">
-                    Il nome commerciale non è stato letto (può essere un logo). Scrivilo qui se ti serve.
-                  </p>
-                )}
+                <Chips
+                  options={nameOptions}
+                  onPick={(t) => setEditableName(t)}
+                  isSelected={(t) => editableName.toLowerCase() === t.toLowerCase()}
+                />
               </div>
 
-              {suggestions.length > 0 && (
+              {showActiveIngredient && (
                 <div>
-                  <p className="text-xs text-teal-700 mb-1">Scritte lette sulla scatola: scegli dove usarle</p>
-                  <div className="space-y-1.5">
-                    {suggestions.map((s) => (
-                      <div key={s} className="rounded-xl border border-teal-200 bg-white px-3 py-2">
-                        <p className="text-sm font-medium text-slate-800 break-words">{s}</p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          {showActiveIngredient && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setEditableActive(s)}
-                                className="rounded-full border border-teal-600 bg-teal-600 px-2.5 py-1 text-xs font-semibold text-white"
-                              >
-                                Principio attivo
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditableActive((cur) => appendActive(cur, s))}
-                                className="rounded-full border border-teal-300 bg-white px-2.5 py-1 text-xs font-semibold text-teal-800"
-                              >
-                                + Aggiungi
-                              </button>
-                            </>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditableName(s);
-                              setNameWarn(false);
-                            }}
-                            className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
-                          >
-                            Nome
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-xs text-teal-600 font-medium mb-1">Dosaggio:</p>
+                  <input
+                    type="text"
+                    value={editableDosage}
+                    onChange={(e) => setEditableDosage(e.target.value)}
+                    placeholder="Es. 500mg"
+                    className="input font-semibold bg-white"
+                  />
+                  <Chips
+                    options={dosageOptions.map((text) => ({ text }))}
+                    onPick={(t) => setEditableDosage(t)}
+                    isSelected={(t) => editableDosage === t}
+                  />
                 </div>
               )}
 
