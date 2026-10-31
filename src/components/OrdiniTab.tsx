@@ -314,6 +314,35 @@ const [saveError, setSaveError] = useState<string | null>(null);
     });
   };
 
+    const handleMarkOrdered = async (kind: 'acc' | 'non') => {
+    const toMark = farmaciList.filter(
+      (i) =>
+        !String(i.id).startsWith('prontuario-') &&
+        (kind === 'acc'
+          ? i.selectedAcc && i.orderAcc > 0
+          : i.selectedNonAcc && i.orderNonAcc > 0)
+    );
+    if (toMark.length === 0) return;
+    if (!window.confirm(`Segnare ${toMark.length} farmaci come IN ORDINE (${kind === 'acc' ? 'acc' : 'non acc'})?`)) return;
+    setSaveError(null);
+    try {
+      for (const item of toMark) {
+        const { error } = await supabase
+          .from('medications')
+          .update({
+            is_ordered: true,
+            ...(kind === 'acc' ? { ordered_acc: item.orderAcc } : { ordered_non_acc: item.orderNonAcc }),
+          })
+          .eq('id', String(item.id));
+        if (error) throw error;
+      }
+      if (onMedicationUpdated) onMedicationUpdated();
+    } catch (err: any) {
+      console.error('Errore segna in ordine:', err);
+      setSaveError(`Non riuscito. ${err?.message || 'Riprova.'}`);
+    }
+  };
+
   const handleExport = () => {
     exportOrderExcel(processedItems);
   };
