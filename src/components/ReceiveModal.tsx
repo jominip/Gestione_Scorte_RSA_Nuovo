@@ -336,6 +336,11 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
                     .filter(Boolean)
                     .join(' · ')}
                 </p>
+                                {selected.is_ordered && (Number(selected.ordered_acc) || 0) + (Number(selected.ordered_non_acc) || 0) > 0 && (
+                  <p className="text-xs font-semibold text-sky-800">
+                    Ordinato: acc {Number(selected.ordered_acc) || 0} · non acc {Number(selected.ordered_non_acc) || 0}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {locations.map((l) => (
                     <span
