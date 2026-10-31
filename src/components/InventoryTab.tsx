@@ -764,7 +764,7 @@ export default function InventoryTab({
       setSaving(false);
     }
   };
-  const handleReceive = async (med: any, qty: number, field: string, completeOrder: boolean) => {
+  const handleReceive = async (med: any, qty: number, field: string, completeOrder: boolean, remaining?: { acc: number; non: number }) => {
     const updates: any = { [field]: (med[field] || 0) + qty };
         if (completeOrder) {       updates.is_ordered = false;       updates.ordered_acc = 0;       updates.ordered_non_acc = 0;     }
     await handleUpdateVirtualOrDb(med, updates);
