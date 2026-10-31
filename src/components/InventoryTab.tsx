@@ -1004,6 +1004,16 @@ export default function InventoryTab({
             {title} {floorFilter !== 'all' && <span className="text-teal-600 text-sm font-semibold">(Filtro: {floorFilter.toUpperCase()} - Esclusi zeri)</span>}
           </h2>
           <div className="flex items-center gap-3">
+           {selectedIds.length > 0 && (
+              <button
+                onClick={handleMarkSelectedOrdered}
+                className="btn-secondary text-xs py-1.5 px-3"
+                title="Segna come IN ORDINE tutte le voci selezionate"
+              >
+                <ShoppingCart className="h-3.5 w-3.5" />
+                Segna In Ordine ({selectedIds.length})
+              </button>
+            )}
             {selectedIds.length > 0 ? (
               <button onClick={handleExportSelected} className="btn-primary text-xs py-1.5 px-3">
                 <Download className="h-3.5 w-3.5" />
