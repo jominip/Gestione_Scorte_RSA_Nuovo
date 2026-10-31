@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Download, Eye, EyeOff, Pill } from 'lucide-react';
+import { Search, Download, Eye, EyeOff, Pill, ShoppingCart } from 'lucide-react';
 import { totalQty, supabase, Medication } from '@/lib/supabase';
 import { exportOrderExcel } from '@/lib/excel';
 import { isAntibiotic } from '@/lib/antibiotics';
