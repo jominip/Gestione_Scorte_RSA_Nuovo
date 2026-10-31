@@ -767,6 +767,11 @@ export default function InventoryTab({
   const handleReceive = async (med: any, qty: number, field: string, completeOrder: boolean, remaining?: { acc: number; non: number }) => {
     const updates: any = { [field]: (med[field] || 0) + qty };
         if (completeOrder) {       updates.is_ordered = false;       updates.ordered_acc = 0;       updates.ordered_non_acc = 0;     }
+    if (!completeOrder && remaining) {
+      updates.ordered_acc = remaining.acc;
+      updates.ordered_non_acc = remaining.non;
+      if (remaining.acc + remaining.non === 0) updates.is_ordered = false;
+    }
     await handleUpdateVirtualOrDb(med, updates);
   };
     // --- Trasferimento tra piani ---
