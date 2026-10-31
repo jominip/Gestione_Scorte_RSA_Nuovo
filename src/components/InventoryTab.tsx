@@ -702,6 +702,23 @@ export default function InventoryTab({
     });
   };
 
+  const handleMarkSelectedOrdered = () => {
+    handleProtectedAction(async () => {
+      const toMark = fullList.filter(
+        (m) => selectedIds.includes(m.id) && !m.isProntuarioVirtual && !m.is_ordered
+      );
+      if (toMark.length === 0) return;
+      try {
+        for (const m of toMark) {
+          await onUpdate(m.id, { is_ordered: true, updated_at: new Date().toISOString() });
+        }
+        setSelectedIds([]);
+      } catch (err) {
+        console.error('Errore segna in ordine:', err);
+      }
+    });
+  };
+
   const handleExportAllFiltered = () => {
     if (filtered.length === 0) return;
     const suffix = floorFilter === 'all' ? 'Completo' : `Filtro_${floorFilter.toUpperCase()}`;
