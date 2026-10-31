@@ -648,6 +648,22 @@ const [saveError, setSaveError] = useState<string | null>(null);
             {totalToOrderCount} voci da ordinare
           </span>
 
+                    <button
+            onClick={() => handleMarkOrdered('acc')}
+            className="btn-secondary text-xs !py-2 whitespace-nowrap"
+            title="Segna come IN ORDINE i farmaci acc spuntati"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Segna acc in ordine
+          </button>
+          <button
+            onClick={() => handleMarkOrdered('non')}
+            className="btn-secondary text-xs !py-2 whitespace-nowrap"
+            title="Segna come IN ORDINE i farmaci non acc spuntati"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Segna non acc in ordine
+          </button>
           <button onClick={handleExport} className="btn-primary text-xs !py-2">
             <Download className="h-3.5 w-3.5" />
             Esporta Excel Selezionati
