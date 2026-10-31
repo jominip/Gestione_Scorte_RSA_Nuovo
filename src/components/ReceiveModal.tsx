@@ -7,7 +7,7 @@ type Props = {
   onClose: () => void;
   medications: any[]; // elenco già filtrato per categoria (farmaci o presidi)
   category: 'farmaco' | 'presidio';
-  onReceive: (med: any, qty: number, field: string, completeOrder: boolean) => Promise<void>;
+  onReceive: (med: any, qty: number, field: string, completeOrder: boolean, remaining?: { acc: number; non: number }) => Promise<void>;
 };
 
 const LOCATIONS = [
@@ -145,7 +145,7 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
     const changeQty = (value: string) => {
     setQty(value);
     const n = parseInt(value, 10);
-    if (isNaN(n) || n < 1) return;
+        if (isNaN(n) || n < 1) return;     if (selected && selected.is_ordered) {       const ot = (Number(selected.ordered_acc) || 0) + (Number(selected.ordered_non_acc) || 0);       if (ot > 0) setComplete(n >= ot);     }
     const active = locations.filter((l) => (alloc[l.field] || 0) > 0);
     if (active.length === 1) {
       setAlloc({ [active[0].field]: n });
@@ -187,7 +187,17 @@ export default function ReceiveModal({ open, onClose, medications, category, onR
         const e = entries[i];
         const isLast = i === entries.length - 1;
         // "In Ordine" si toglie solo con l'ultima area, quando tutto è stato salvato
-        await onReceive(current, e.value, e.field, selected.is_ordered ? complete && isLast : false);
+        let remaining: { acc: number; non: number } | undefined;
+        if (isLast && selected.is_ordered && !complete) {
+          const oAcc = Number(selected.ordered_acc) || 0;
+          const oNon = Number(selected.ordered_non_acc) || 0;
+          if (oAcc + oNon > 0) {
+            const takeNon = Math.min(oNon, n);
+            const takeAcc = Math.min(oAcc, n - takeNon);
+            remaining = { acc: oAcc - takeAcc, non: oNon - takeNon };
+          }
+        }
+        await onReceive(current, e.value, e.field, selected.is_ordered ? complete && isLast : false, remaining);
         savedFields.push(e.field);
         current = { ...current, [e.field]: (Number(current[e.field]) || 0) + e.value };
       }
@@ -448,7 +458,13 @@ style={{ paddingLeft: 4, paddingRight: 4 }}
                     onChange={(e) => setComplete(e.target.checked)}
                     className="rounded border-slate-300 text-teal-600 focus:ring-teal-200"
                   />
-                  Ordine arrivato: togli "In Ordine"
+                                    Ordine arrivato: togli "In Ordine"
+                  {(() => {
+                    const ot = (Number(selected.ordered_acc) || 0) + (Number(selected.ordered_non_acc) || 0);
+                    return ot > 0 && arrived < ot ? (
+                      <span className="ml-1 text-amber-700 font-semibold">(mancano {ot - arrived})</span>
+                    ) : null;
+                  })()}
                 </label>
               )}
 
