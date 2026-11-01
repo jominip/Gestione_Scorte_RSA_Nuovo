@@ -435,7 +435,16 @@ export default function InventoryTab({
   const [lastChanges, setLastChanges] = useState<{ [key: string]: { diff: number; type: 'carico' | 'scarico' } }>({});
 
   // Stati per la sicurezza PIN
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlockedState] = useState<boolean>(() => {
+    try { return sessionStorage.getItem('rsa_unlocked') === '1'; } catch { return false; }
+  });
+  const setIsUnlocked = (v: boolean) => {
+    setIsUnlockedState(v);
+    try {
+      if (v) sessionStorage.setItem('rsa_unlocked', '1');
+      else sessionStorage.removeItem('rsa_unlocked');
+    } catch {}
+  };
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
