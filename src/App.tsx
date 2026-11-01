@@ -67,10 +67,12 @@ export default function App() {
       item_type: med.item_type || 'Compresse',
       commercial_name: med.commercial_name || '—',
       pack_size: med.pack_size || 1,
-      qty_pt: 0,
-      qty_1: 0,
-      qty_2: 0,
-      qty_3: 0,
+            qty_mc: med.qty_mc || 0,
+      qty_pt: med.qty_pt || 0,
+      qty_1: med.qty_1 || 0,
+      qty_2: med.qty_2 || 0,
+      qty_3: med.qty_3 || 0,
+      qty_pl: med.qty_pl || 0,
       category: med.category,
       hidden: false
     };
