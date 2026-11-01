@@ -795,7 +795,8 @@ export default function InventoryTab({
     { key: 'qty_pt', label: 'Piano Terra (PT)' },
     { key: 'qty_1', label: 'Piano 1' },
     { key: 'qty_2', label: 'Piano 2' },
-    { key: 'qty_3', label: 'Piano 3' },
+      { key: 'qty_3', label: 'Piano 3' },
+    { key: 'qty_pl', label: 'Palestra (PL)' },
   ];
 
   const transferLive = transferMed
