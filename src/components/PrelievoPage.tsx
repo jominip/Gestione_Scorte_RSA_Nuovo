@@ -102,7 +102,7 @@ export default function PrelievoPage() {
     return map;
   }, [meds]);
 
-  const suggerimenti = (query: string): Medication[] => {
+    const suggerimenti = (query: string): Medication[] => {
     const q = normalizza(query).trim();
     if (q.length < 2) return [];
     const parole = q.split(/\s+/).filter(Boolean);
@@ -110,6 +110,18 @@ export default function PrelievoPage() {
       .filter((m) => {
         const testo = normalizza(
           `${m.active_ingredient} ${m.dosage || ''} ${m.commercial_name || ''}`
+        );
+        return parole.every((p) => testo.includes(p));
+      })
+      .sort((a, b) => {
+        const nome = (a.active_ingredient || '').localeCompare(b.active_ingredient || '', 'it');
+        if (nome !== 0) return nome;
+        const tipo = (a.item_type || '').localeCompare(b.item_type || '', 'it');
+        if (tipo !== 0) return tipo;
+        return valoreDosaggio(a.dosage) - valoreDosaggio(b.dosage);
+      })
+      .slice(0, 12);
+  };
         );
         return parole.every((p) => testo.includes(p));
       })
