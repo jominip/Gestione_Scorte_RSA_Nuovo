@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Package, Warehouse, Bandage, ShoppingCart, RefreshCw } from 'lucide-react';
+import { Package, Warehouse, Bandage, ShoppingCart, RefreshCw, ClipboardList } from 'lucide-react';
 import { supabase, type Medication, type MedicationInsert, needsOrder } from '@/lib/supabase';
 import InventoryTab from '@/components/InventoryTab';
 import OrdiniTab from '@/components/OrdiniTab';
