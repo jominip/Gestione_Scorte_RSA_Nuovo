@@ -343,7 +343,7 @@ export default function PrelievoPage() {
                           className={inputClass}
                         >
                           <option value="">Scegli</option>
-                          {PIANI.map((p) => (
+                                                    {PIANI.filter((p) => p !== 'MC' || (med && med.category === 'presidio')).map((p) => (
                             <option key={p} value={p}>
                               {p}
                             </option>
