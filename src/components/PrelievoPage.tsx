@@ -280,8 +280,17 @@ export default function PrelievoPage() {
                         autoCorrect="off"
                         className={inputClass}
                       />
-                      {med && commerciale(med) && (
-                        <p className="mt-1 text-xs text-slate-500">{commerciale(med)}</p>
+                                            {med && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          {med.item_type && (
+                            <span className="rounded-md bg-teal-100 px-2 py-0.5 text-xs font-bold text-teal-800">
+                              {med.item_type}
+                            </span>
+                          )}
+                          {commerciale(med) && (
+                            <span className="text-xs text-slate-500">{commerciale(med)}</span>
+                          )}
+                        </div>
                       )}
 
                       {mostraLista && (
