@@ -7,7 +7,7 @@ import PrelievoPage from '@/components/PrelievoPage';
 
 type Tab = 'farmacia' | 'presidi' | 'ordini';
 
-export default function App() {
+function MainApp() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
