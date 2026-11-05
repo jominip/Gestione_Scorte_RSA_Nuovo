@@ -122,9 +122,13 @@ export default function PrelieviTab() {
                     {r.collega} · {formatData(r.created_at)}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-red-600">−{r.scatole}</p>
-                  <p className="text-xs text-slate-500">Piano {r.piano}</p>
+                                <div className="flex items-center gap-3">
+                  <span className="whitespace-nowrap rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
+                    {/^\d$/.test(r.piano) ? `Piano ${r.piano}` : r.piano}
+                  </span>
+                  <span className="w-10 text-right text-sm font-bold text-red-600">
+                    −{r.scatole}
+                  </span>
                 </div>
               </li>
             ))}
