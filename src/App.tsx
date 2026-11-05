@@ -168,7 +168,8 @@ function MainApp() {
   const tabs: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'farmacia', label: 'Armadio Farmacia', icon: <Warehouse className="h-4 w-4" /> },
     { id: 'presidi', label: 'Magazzino Presidi', icon: <Bandage className="h-4 w-4" /> },
-    { id: 'ordini', label: 'Ordini', icon: <ShoppingCart className="h-4 w-4" />, badge: lowStockCount },
+        { id: 'ordini', label: 'Ordini', icon: <ShoppingCart className="h-4 w-4" />, badge: lowStockCount },
+    { id: 'prelievi', label: 'Prelievi', icon: <ClipboardList className="h-4 w-4" /> },
   ];
 
   return (
