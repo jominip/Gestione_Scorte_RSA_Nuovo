@@ -270,12 +270,8 @@ export default function PrelievoPage() {
                       <input
                         type="text"
                         value={r.query}
-                        onChange={(e) => {
-                                                            aggiorna(r.key, {
-                                    query: etichetta(m),
-                                    medId: m.id,
-                                    piano: r.piano === 'MC' && m.category !== 'presidio' ? '' : r.piano,
-                                  });
+                                                onChange={(e) => {
+                          aggiorna(r.key, { query: e.target.value, medId: null });
                           setApertaKey(r.key);
                         }}
                         onFocus={() => setApertaKey(r.key)}
