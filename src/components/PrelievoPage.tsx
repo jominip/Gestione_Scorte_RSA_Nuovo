@@ -271,7 +271,11 @@ export default function PrelievoPage() {
                         type="text"
                         value={r.query}
                         onChange={(e) => {
-                          aggiorna(r.key, { query: e.target.value, medId: null });
+                                                            aggiorna(r.key, {
+                                    query: etichetta(m),
+                                    medId: m.id,
+                                    piano: r.piano === 'MC' && m.category !== 'presidio' ? '' : r.piano,
+                                  });
                           setApertaKey(r.key);
                         }}
                         onFocus={() => setApertaKey(r.key)}
