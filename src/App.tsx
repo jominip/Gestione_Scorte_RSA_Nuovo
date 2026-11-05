@@ -263,6 +263,7 @@ function MainApp() {
     </div>
   );
 
+
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   if (path === '/prelievo') return <PrelievoPage />;
