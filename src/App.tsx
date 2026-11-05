@@ -4,6 +4,7 @@ import { supabase, type Medication, type MedicationInsert, needsOrder } from '@/
 import InventoryTab from '@/components/InventoryTab';
 import OrdiniTab from '@/components/OrdiniTab';
 import PrelievoPage from '@/components/PrelievoPage';
+import PrelieviTab from '@/components/PrelieviTab';
 
 type Tab = 'farmacia' | 'presidi' | 'ordini';
 
