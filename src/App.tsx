@@ -6,7 +6,7 @@ import OrdiniTab from '@/components/OrdiniTab';
 import PrelievoPage from '@/components/PrelievoPage';
 import PrelieviTab from '@/components/PrelieviTab';
 
-type Tab = 'farmacia' | 'presidi' | 'ordini';
+type Tab = 'farmacia' | 'presidi' | 'ordini' | 'prelievi';
 
 function MainApp() {
   const [medications, setMedications] = useState<Medication[]>([]);
