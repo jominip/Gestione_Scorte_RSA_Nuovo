@@ -259,6 +259,7 @@ function MainApp() {
                 onMedicationUpdated={fetchMedications} 
               />
             )}
+                      {activeTab === 'prelievi' && <PrelieviTab />}
           </>
         )}
       </main>
