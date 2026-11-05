@@ -260,8 +260,9 @@ function MainApp() {
           </>
         )}
       </main>
-    </div>
+        </div>
   );
+}
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '').toLowerCase();
