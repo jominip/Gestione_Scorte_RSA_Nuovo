@@ -305,9 +305,14 @@ export default function PrelievoPage() {
                                 }}
                                 className="block w-full border-b border-slate-100 px-3 py-3 text-left last:border-b-0 active:bg-slate-100"
                               >
-                                <span className="block text-base text-slate-900">
+                                                                <span className="block text-base text-slate-900">
                                   {etichetta(m)}
                                 </span>
+                                {m.item_type && (
+                                  <span className="mt-1 inline-block rounded-md bg-teal-100 px-2 py-0.5 text-xs font-bold text-teal-800">
+                                    {m.item_type}
+                                  </span>
+                                )}
                                 {commerciale(m) && (
                                   <span className="block text-xs text-slate-500">
                                     {commerciale(m)}
