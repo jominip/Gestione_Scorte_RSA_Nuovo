@@ -30,7 +30,13 @@ export default function PrelieviTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
   const [cerca, setCerca] = useState('');
+
+  const [selezionati, setSelezionati] = useState<Set<number>>(new Set());
+  const [confermaAperta, setConfermaAperta] = useState(false);
+  const [pin, setPin] = useState('');
+  const [eliminando, setEliminando] = useState(false);
 
   const carica = useCallback(async () => {
     const { data, error } = await supabase
@@ -75,6 +81,57 @@ export default function PrelieviTab() {
     return PIANI.filter((p) => p !== 'MC' || haMC);
   }, [righe]);
 
+  // si eliminano solo le righe scelte che si vedono in questo momento
+  const idDaEliminare = useMemo(
+    () => filtrate.filter((r) => selezionati.has(r.id)).map((r) => r.id),
+    [filtrate, selezionati]
+  );
+
+  const tuttiScelti = filtrate.length > 0 && idDaEliminare.length === filtrate.length;
+
+  const toggle = (id: number) => {
+    setSelezionati((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleTutti = () => {
+    if (tuttiScelti) setSelezionati(new Set());
+    else setSelezionati(new Set(filtrate.map((r) => r.id)));
+  };
+
+  const annullaSelezione = () => {
+    setSelezionati(new Set());
+    setConfermaAperta(false);
+    setPin('');
+  };
+
+  const elimina = async () => {
+    if (idDaEliminare.length === 0) return;
+    if (!pin.trim()) {
+      setErrore('Scrivi il PIN.');
+      return;
+    }
+    setEliminando(true);
+    setErrore(null);
+    setOkMsg(null);
+    const { data, error } = await supabase.rpc('elimina_prelievi', {
+      p_ids: idDaEliminare,
+      p_pin: pin.trim(),
+    });
+    setEliminando(false);
+    if (error) {
+      setErrore(error.message);
+      return;
+    }
+    annullaSelezione();
+    setOkMsg(`Eliminati ${data ?? idDaEliminare.length} prelievi dal registro.`);
+    await carica();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -99,6 +156,12 @@ export default function PrelieviTab() {
         />
       </div>
 
+      {okMsg && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+          {okMsg}
+        </div>
+      )}
+
       {errore && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {errore}
@@ -121,9 +184,18 @@ export default function PrelieviTab() {
           </p>
 
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-            <table className="w-full min-w-[620px] text-sm">
+            <table className="w-full min-w-[660px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+                  <th className="w-8 px-2 py-2.5 text-center">
+                    <input
+                      type="checkbox"
+                      checked={tuttiScelti}
+                      onChange={toggleTutti}
+                      className="cursor-pointer rounded border-slate-300 text-teal-600 focus:ring-teal-200"
+                      title="Seleziona tutti quelli che vedi"
+                    />
+                  </th>
                   <th className="px-3 py-2.5 text-left">Farmaco</th>
                   {pianiVisibili.map((p) => (
                     <th key={p} className="w-12 px-2 py-2.5 text-center">
@@ -135,30 +207,108 @@ export default function PrelieviTab() {
                 </tr>
               </thead>
               <tbody>
-                {filtrate.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-100 last:border-b-0">
-                    <td className="px-3 py-2.5 font-semibold text-slate-900">
-                      {r.farmaco || '—'}
-                    </td>
-                    {pianiVisibili.map((p) => (
-                      <td key={p} className="px-2 py-2.5 text-center tabular-nums">
-                        {r.piano === p ? (
-                          <span className="font-bold text-red-600">−{r.scatole}</span>
-                        ) : (
-                          <span className="text-slate-300">0</span>
-                        )}
+                {filtrate.map((r) => {
+                  const scelto = selezionati.has(r.id);
+                  return (
+                    <tr
+                      key={r.id}
+                      className={`border-b border-slate-100 last:border-b-0 ${
+                        scelto ? 'bg-red-50' : ''
+                      }`}
+                    >
+                      <td className="px-2 py-2.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={scelto}
+                          onChange={() => toggle(r.id)}
+                          className="cursor-pointer rounded border-slate-300 text-teal-600 focus:ring-teal-200"
+                        />
                       </td>
-                    ))}
-                    <td className="whitespace-nowrap px-3 py-2.5 text-slate-700">{r.collega}</td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">
-                      {formatData(r.created_at)}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-3 py-2.5 font-semibold text-slate-900">
+                        {r.farmaco || '—'}
+                      </td>
+                      {pianiVisibili.map((p) => (
+                        <td key={p} className="px-2 py-2.5 text-center tabular-nums">
+                          {r.piano === p ? (
+                            <span className="font-bold text-red-600">−{r.scatole}</span>
+                          ) : (
+                            <span className="text-slate-300">0</span>
+                          )}
+                        </td>
+                      ))}
+                      <td className="whitespace-nowrap px-3 py-2.5 text-slate-700">{r.collega}</td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">
+                        {formatData(r.created_at)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </>
+      )}
+
+      {idDaEliminare.length > 0 && (
+        <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white px-4 py-3 shadow-lg sm:mx-0 sm:rounded-xl sm:border">
+          {!confermaAperta ? (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-slate-700">
+                Scelti: <b>{idDaEliminare.length}</b>
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={annullaSelezione}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+                >
+                  Annulla
+                </button>
+                <button
+                  onClick={() => setConfermaAperta(true)}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white"
+                >
+                  Elimina selezionati
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-800">
+                Stai per eliminare <b>{idDaEliminare.length}</b>{' '}
+                {idDaEliminare.length === 1 ? 'prelievo' : 'prelievi'} dal registro.{' '}
+                <b>Le scatole NON tornano nell'inventario</b>: si cancella solo la riga
+                dell'elenco.
+              </p>
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                placeholder="Scrivi il PIN"
+                autoComplete="off"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setConfermaAperta(false);
+                    setPin('');
+                  }}
+                  disabled={eliminando}
+                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700"
+                >
+                  Indietro
+                </button>
+                <button
+                  onClick={elimina}
+                  disabled={eliminando || !pin.trim()}
+                  className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40"
+                >
+                  {eliminando ? 'Elimino...' : 'Conferma eliminazione'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
