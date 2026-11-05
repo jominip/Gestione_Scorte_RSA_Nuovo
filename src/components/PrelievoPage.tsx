@@ -122,11 +122,6 @@ export default function PrelievoPage() {
       })
       .slice(0, 12);
   };
-        );
-        return parole.every((p) => testo.includes(p));
-      })
-      .slice(0, 8);
-  };
 
   const aggiorna = (key: number, patch: Partial<Riga>) => {
     setRighe((prev) =>
