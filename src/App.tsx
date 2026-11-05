@@ -3,6 +3,7 @@ import { Package, Warehouse, Bandage, ShoppingCart, RefreshCw } from 'lucide-rea
 import { supabase, type Medication, type MedicationInsert, needsOrder } from '@/lib/supabase';
 import InventoryTab from '@/components/InventoryTab';
 import OrdiniTab from '@/components/OrdiniTab';
+import PrelievoPage from '@/components/PrelievoPage';
 
 type Tab = 'farmacia' | 'presidi' | 'ordini';
 
