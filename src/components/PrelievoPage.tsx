@@ -43,6 +43,18 @@ const etichetta = (m: Medication) => {
 const commerciale = (m: Medication) =>
   m.commercial_name && m.commercial_name !== '—' ? m.commercial_name : '';
 
+const valoreDosaggio = (d: string | null | undefined): number => {
+  if (!d || d === '—') return -1;
+  const t = d.toLowerCase().replace(',', '.');
+  const match = t.match(/(\d+(?:\.\d+)?)\s*(mcg|µg|ug|mg|g|ml|ui)?/);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+  let n = parseFloat(match[1]);
+  const u = match[2];
+  if (u === 'g') n *= 1000;
+  else if (u === 'mcg' || u === 'µg' || u === 'ug') n /= 1000;
+  return n;
+};
+
 const inputClass =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500';
 
