@@ -296,7 +296,11 @@ export default function PrelievoPage() {
                                 key={m.id}
                                 type="button"
                                 onClick={() => {
-                                  aggiorna(r.key, { query: etichetta(m), medId: m.id });
+                                                                    aggiorna(r.key, {
+                                    query: etichetta(m),
+                                    medId: m.id,
+                                    piano: r.piano === 'MC' && m.category !== 'presidio' ? '' : r.piano,
+                                  });
                                   setApertaKey(null);
                                 }}
                                 className="block w-full border-b border-slate-100 px-3 py-3 text-left last:border-b-0 active:bg-slate-100"
