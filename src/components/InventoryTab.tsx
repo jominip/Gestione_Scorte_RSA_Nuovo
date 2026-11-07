@@ -579,7 +579,15 @@ export default function InventoryTab({
       });
     });
 
-    return resultList;
+        const sectionOrder = [...PRONTUARIO_CATEGORIZZATO.map((g) => g.section), 'ALTRI PRESIDI'];
+    const sectionIdx = (s: string) => {
+      const i = sectionOrder.indexOf(s);
+      return i === -1 ? sectionOrder.length : i;
+    };
+    return resultList
+      .map((it, pos) => ({ it, pos }))
+      .sort((a, b) => sectionIdx(a.it.section) - sectionIdx(b.it.section) || a.pos - b.pos)
+      .map((x) => x.it);
   }, [medications, category]);
 
   const filtered = useMemo(() => {
