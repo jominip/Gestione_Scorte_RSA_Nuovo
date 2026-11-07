@@ -1400,9 +1400,9 @@ export default function InventoryTab({
                                         }}
                                         className="text-xs border border-slate-300 rounded px-1 py-1 max-w-[220px]"
                                       >
-                                        {[...PRONTUARIO_CATEGORIZZATO.map((g) => g.section), 'ALTRI PRESIDI'].map((s) => (
-                                          <option key={s} value={s}>{s}</option>
-                                        ))}
+                                        {allSectionKeys.map((s) => (
+  <option key={s} value={s}>{displayName(s)}</option>
+))}
                                       </select>
                                       <button
                                         onClick={() => setSectionEditId(null)}
