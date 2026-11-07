@@ -533,7 +533,7 @@ export default function InventoryTab({
 
     const dbMap = new Map<string, any>();
     dbItems.forEach((item) => {
-      dbMap.set(item.active_ingredient.trim().toLowerCase(), item);
+            dbMap.set((item.prontuario_key || item.active_ingredient).trim().toLowerCase(), item);
     });
 
     const resultList: any[] = [];
