@@ -485,7 +485,83 @@ export default function InventoryTab({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+  const [sezioniDb, setSezioniDb] = useState<Record<string, { nome: string; ordine: number | null; custom: boolean }>>({});
+  const [renameKey, setRenameKey] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState('');
+  const [newSectionOpen, setNewSectionOpen] = useState(false);
+  const [newSectionName, setNewSectionName] = useState('');
+  const [sectionError, setSectionError] = useState('');
 
+  useEffect(() => {
+    if (category !== 'presidio') return;
+    (async () => {
+      const { data, error } = await supabase.from('sezioni_presidi').select('*');
+      if (error || !data) return;
+      const map: Record<string, { nome: string; ordine: number | null; custom: boolean }> = {};
+      data.forEach((r: any) => {
+        map[r.chiave] = { nome: r.nome, ordine: r.ordine, custom: !!r.custom };
+      });
+      setSezioniDb(map);
+    })();
+  }, [category]);
+
+  const displayName = (key: string) => sezioniDb[key]?.nome || key;
+
+  const allSectionKeys = [
+    ...PRONTUARIO_CATEGORIZZATO.map((g) => g.section),
+    ...Object.keys(sezioniDb)
+      .filter((k) => sezioniDb[k].custom)
+      .sort((a, b) => (sezioniDb[a].ordine ?? 0) - (sezioniDb[b].ordine ?? 0)),
+    'ALTRI PRESIDI',
+  ];
+
+  const nameTaken = (nome: string, exceptKey?: string) =>
+    Array.from(new Set([...allSectionKeys, ...Object.keys(sezioniDb)])).some(
+      (k) => k !== exceptKey && displayName(k).trim().toLowerCase() === nome.trim().toLowerCase()
+    );
+
+  const saveRename = async () => {
+    const key = renameKey;
+    const nome = renameVal.trim();
+    if (!key || !nome) {
+      setRenameKey(null);
+      return;
+    }
+    if (nameTaken(nome, key)) {
+      setSectionError('Esiste già una categoria con questo nome.');
+      return;
+    }
+    const prev = sezioniDb[key];
+    const row = { chiave: key, nome, ordine: prev?.ordine ?? null, custom: prev?.custom ?? false };
+    const { error } = await supabase.from('sezioni_presidi').upsert(row);
+    if (error) {
+      setSectionError('Errore nel salvataggio del nome: ' + error.message);
+      return;
+    }
+    setSezioniDb((p) => ({ ...p, [key]: { nome, ordine: row.ordine, custom: row.custom } }));
+    setSectionError('');
+    setRenameKey(null);
+  };
+
+  const addSection = async () => {
+    const nome = newSectionName.trim();
+    if (!nome) return;
+    if (nameTaken(nome)) {
+      setSectionError('Esiste già una categoria con questo nome.');
+      return;
+    }
+    const maxOrd = Math.max(0, ...Object.values(sezioniDb).map((s) => s.ordine ?? 0));
+    const row = { chiave: `custom-${Date.now()}`, nome, ordine: maxOrd + 1, custom: true };
+    const { error } = await supabase.from('sezioni_presidi').insert(row);
+    if (error) {
+      setSectionError('Errore nel salvataggio della categoria: ' + error.message);
+      return;
+    }
+    setSezioniDb((p) => ({ ...p, [row.chiave]: { nome, ordine: row.ordine, custom: true } }));
+    setNewSectionName('');
+    setNewSectionOpen(false);
+    setSectionError('');
+  };
   const fullList = useMemo(() => {
     const dbItems = medications.filter((m) => m.category === category);
     
