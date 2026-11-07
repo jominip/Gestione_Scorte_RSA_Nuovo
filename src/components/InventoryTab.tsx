@@ -1110,7 +1110,49 @@ export default function InventoryTab({
           )}
         </div>
       </div>
-
+      {category === 'presidio' && (
+        <div className="no-print flex flex-wrap items-center gap-2 text-xs">
+          {!newSectionOpen ? (
+            <button
+              onClick={() =>
+                handleProtectedAction(() => {
+                  setNewSectionOpen(true);
+                  setSectionError('');
+                })
+              }
+              className="btn-secondary whitespace-nowrap"
+            >
+              <Plus className="h-4 w-4" />
+              Nuova categoria
+            </button>
+          ) : (
+            <>
+              <input
+                value={newSectionName}
+                onChange={(e) => setNewSectionName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addSection();
+                }}
+                placeholder="Nome della nuova categoria"
+                className="border border-slate-300 rounded px-2 py-1.5 text-xs w-64 max-w-full"
+                autoFocus
+              />
+              <button onClick={addSection} className="btn-primary">Salva</button>
+              <button
+                onClick={() => {
+                  setNewSectionOpen(false);
+                  setNewSectionName('');
+                  setSectionError('');
+                }}
+                className="btn-secondary"
+              >
+                Annulla
+              </button>
+            </>
+          )}
+          {sectionError && <span className="text-red-600 font-semibold">{sectionError}</span>}
+        </div>
+      )}
       <div className="printable-inventory-section space-y-3">
         <div className="no-print flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900">
