@@ -1223,7 +1223,45 @@ export default function InventoryTab({
                         {showHeader && (
                           <tr className="bg-teal-700 text-white font-bold">
                             <td colSpan={colSpanCount} className="px-3 py-1.5 text-xs tracking-wider">
-                              {med.section}
+                              {category === 'presidio' && renameKey === med.section ? (
+  <span className="no-print flex flex-wrap items-center gap-1.5">
+    <input
+      value={renameVal}
+      onChange={(e) => setRenameVal(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') saveRename();
+        if (e.key === 'Escape') setRenameKey(null);
+      }}
+      className="text-slate-800 text-xs rounded px-2 py-1 w-64 max-w-full"
+      autoFocus
+    />
+    <button onClick={saveRename} className="bg-white text-teal-800 px-2 py-0.5 rounded text-[11px] font-bold">
+      Salva
+    </button>
+    <button onClick={() => setRenameKey(null)} className="bg-teal-900 text-white px-2 py-0.5 rounded text-[11px]">
+      Annulla
+    </button>
+  </span>
+) : (
+  <span className="flex items-center gap-2">
+    {category === 'presidio' ? displayName(med.section) : med.section}
+    {category === 'presidio' && (
+      <button
+        onClick={() =>
+          handleProtectedAction(() => {
+            setRenameKey(med.section);
+            setRenameVal(displayName(med.section));
+            setSectionError('');
+          })
+        }
+        className="no-print p-0.5 rounded text-teal-100 hover:text-white hover:bg-teal-600"
+        title="Cambia nome categoria"
+      >
+        <Pencil className="h-3 w-3" />
+      </button>
+    )}
+  </span>
+)}
                             </td>
                           </tr>
                         )}
