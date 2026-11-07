@@ -544,9 +544,9 @@ export default function InventoryTab({
         const key = pName.trim().toLowerCase();
         if (dbMap.has(key)) {
           const item = dbMap.get(key);
-          resultList.push({
+                    resultList.push({
             ...item,
-            section: catGroup.section,
+            section: item.section || catGroup.section,
           });
           dbMap.delete(key);
         } else {
