@@ -795,7 +795,8 @@ export default function InventoryTab({
     await handleUpdateVirtualOrDb(med, updates);
   };
     // --- Trasferimento tra piani ---
-  const [transferMed, setTransferMed] = useState<any | null>(null);
+    const [transferMed, setTransferMed] = useState<any | null>(null);
+  const [sectionEditId, setSectionEditId] = useState<string | null>(null);
   const [trFrom, setTrFrom] = useState('qty_pt');
   const [trTo, setTrTo] = useState('qty_1');
   const [trQty, setTrQty] = useState('1');
