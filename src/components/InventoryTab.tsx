@@ -4,6 +4,7 @@ import {
   totalQty,
   ITEM_TYPES,
   isBelowThreshold,
+  supabase,
 } from '@/lib/supabase';
 import { exportMedicationsExcel } from '@/lib/excel';
 import { isAntibiotic } from '@/lib/antibiotics';
