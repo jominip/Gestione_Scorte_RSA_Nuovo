@@ -1263,7 +1263,41 @@ export default function InventoryTab({
                             </div>
                           </td>
                           <td className="no-print px-2 py-1 text-center w-20 whitespace-nowrap">
-                            <div className="flex items-center justify-center gap-1">
+                                                        <div className="flex items-center justify-center gap-1">
+                              {category === 'presidio' && (
+                                <>
+                                  <button
+                                    onClick={() => setSectionEditId(sectionEditId === med.id ? null : med.id)}
+                                    className="p-1 rounded text-slate-400 hover:text-teal-600 hover:bg-slate-200 transition-colors"
+                                    title="Cambia categoria"
+                                  >
+                                    <FolderInput className="h-3.5 w-3.5" />
+                                  </button>
+                                  {sectionEditId === med.id && (
+                                    <div className="absolute right-4 z-50 flex items-center gap-1 bg-white p-2 rounded border border-slate-300 shadow-lg">
+                                      <select
+                                        value={med.section || 'ALTRI PRESIDI'}
+                                        onChange={(e) => {
+                                          const newSection = e.target.value;
+                                          setSectionEditId(null);
+                                          handleProtectedAction(() => handleUpdateVirtualOrDb(med, { section: newSection }));
+                                        }}
+                                        className="text-xs border border-slate-300 rounded px-1 py-1 max-w-[220px]"
+                                      >
+                                        {[...PRONTUARIO_CATEGORIZZATO.map((g) => g.section), 'ALTRI PRESIDI'].map((s) => (
+                                          <option key={s} value={s}>{s}</option>
+                                        ))}
+                                      </select>
+                                      <button
+                                        onClick={() => setSectionEditId(null)}
+                                        className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px]"
+                                      >
+                                        Annulla
+                                      </button>
+                                    </div>
+                                  )}
+                                </>
+                              )}
                               {!med.isProntuarioVirtual && (
                                 <>
                                                                   <button
