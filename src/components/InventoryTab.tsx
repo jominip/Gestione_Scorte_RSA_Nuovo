@@ -656,7 +656,8 @@ export default function InventoryTab({
       });
     });
 
-        const sectionOrder = [...PRONTUARIO_CATEGORIZZATO.map((g) => g.section), 'ALTRI PRESIDI'];
+            const customOrder = Object.keys(sezioniDb).filter((k) => sezioniDb[k].custom).sort((a, b) => (sezioniDb[a].ordine ?? 0) - (sezioniDb[b].ordine ?? 0));
+    const sectionOrder = [...PRONTUARIO_CATEGORIZZATO.map((g) => g.section), ...customOrder, 'ALTRI PRESIDI'];
     const sectionIdx = (s: string) => {
       const i = sectionOrder.indexOf(s);
       return i === -1 ? sectionOrder.length : i;
