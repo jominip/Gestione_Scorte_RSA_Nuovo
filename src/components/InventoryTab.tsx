@@ -660,10 +660,21 @@ export default function InventoryTab({
       }));
     }
 
-    const finalUpdates = {
+        const finalUpdates: any = {
       ...updates,
       updated_at: nowIso,
     };
+
+    // Se cambio il nome di una voce del prontuario, ricordo il nome originale
+    // così la voce resta nella sua sezione e non nasce una copia.
+    if (
+      updates.active_ingredient !== undefined &&
+      med.category === 'presidio' &&
+      !med.prontuario_key &&
+      med.section !== 'ALTRI PRESIDI'
+    ) {
+      finalUpdates.prontuario_key = med.active_ingredient;
+    }
 
     if (med.isProntuarioVirtual) {
       await onAdd({
