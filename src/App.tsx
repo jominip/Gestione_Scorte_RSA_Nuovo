@@ -75,8 +75,10 @@ function MainApp() {
       qty_2: med.qty_2 || 0,
       qty_3: med.qty_3 || 0,
       qty_pl: med.qty_pl || 0,
-      category: med.category,
-      hidden: false
+            category: med.category,
+      hidden: false,
+      ...((med as any).section ? { section: (med as any).section } : {}),
+      ...((med as any).prontuario_key ? { prontuario_key: (med as any).prontuario_key } : {}),
     };
 
     const { data, error } = await supabase.from('medications').insert([cleanMed]).select();
