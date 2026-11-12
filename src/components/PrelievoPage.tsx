@@ -113,12 +113,16 @@ export default function PrelievoPage() {
         );
         return parole.every((p) => testo.includes(p));
       })
-      .sort((a, b) => {
-        const nome = (a.active_ingredient || '').localeCompare(b.active_ingredient || '', 'it');
+            .sort((a, b) => {
+        const chiave = (s: string | null | undefined) =>
+          normalizza(s || '').replace(/\s+/g, ' ').trim();
+        const nome = chiave(a.active_ingredient).localeCompare(chiave(b.active_ingredient), 'it');
         if (nome !== 0) return nome;
-        const tipo = (a.item_type || '').localeCompare(b.item_type || '', 'it');
+        const tipo = chiave(a.item_type).localeCompare(chiave(b.item_type), 'it');
         if (tipo !== 0) return tipo;
-        return valoreDosaggio(a.dosage) - valoreDosaggio(b.dosage);
+        const dose = valoreDosaggio(a.dosage) - valoreDosaggio(b.dosage);
+        if (dose !== 0) return dose;
+        return chiave(a.commercial_name).localeCompare(chiave(b.commercial_name), 'it');
       })
       .slice(0, 12);
   };
