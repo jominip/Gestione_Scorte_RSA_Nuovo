@@ -51,7 +51,8 @@ function MainApp() {
     const esisteGia = medications.find(m => 
       m.category === med.category &&
       m.active_ingredient.trim().toUpperCase() === activeClean &&
-      (m.dosage || '').trim().toLowerCase() === dosageClean
+            (m.dosage || '').trim().toLowerCase() === dosageClean &&
+      (m.item_type || 'Compresse').trim().toLowerCase() === (med.item_type || 'Compresse').trim().toLowerCase()
     );
 
     if (esisteGia) {
