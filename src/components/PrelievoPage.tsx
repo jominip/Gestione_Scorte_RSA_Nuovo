@@ -244,6 +244,7 @@ export default function PrelievoPage() {
           <label className="mb-1 block text-sm font-medium text-slate-700">Il tuo nome</label>
           <input
             type="text"
+                        id="prelievo-nome"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="Nome e cognome"
