@@ -205,8 +205,10 @@ export default function PrelievoPage() {
     setSaving(false);
 
     if (nonSalvate.length === 0) {
-      setRighe([nuovaRiga(nextKey)]);
+            const chiaveNuova = nextKey;
+      setRighe([nuovaRiga(chiaveNuova)]);
       setNextKey((k) => k + 1);
+      setTimeout(() => document.getElementById(`farmaco-${chiaveNuova}`)?.focus(), 100);
       setMessaggio({
         tipo: 'ok',
         testo: `Prelievo salvato (${salvate} ${salvate === 1 ? 'riga' : 'righe'}).`,
