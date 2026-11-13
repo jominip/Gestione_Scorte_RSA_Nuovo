@@ -94,7 +94,15 @@ export default function PrelievoPage() {
       await carica();
       setLoading(false);
     })();
-  }, [carica]);
+    }, [carica]);
+
+  useEffect(() => {
+    if (loading) return;
+    const id = nome.trim() ? 'farmaco-1' : 'prelievo-nome';
+    setTimeout(() => document.getElementById(id)?.focus(), 100);
+    // solo quando finisce il caricamento
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const medById = useMemo(() => {
     const map = new Map<string, Medication>();
