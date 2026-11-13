@@ -293,6 +293,7 @@ export default function PrelievoPage() {
                       </label>
                       <input
                         type="text"
+                                                id={`farmaco-${r.key}`}
                         value={r.query}
                                                 onChange={(e) => {
                           aggiorna(r.key, { query: e.target.value, medId: null });
