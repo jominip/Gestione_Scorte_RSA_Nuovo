@@ -141,9 +141,11 @@ export default function PrelievoPage() {
     );
   };
 
-  const aggiungiRiga = () => {
-    setRighe((prev) => [...prev, nuovaRiga(nextKey)]);
+    const aggiungiRiga = () => {
+    const chiaveNuova = nextKey;
+    setRighe((prev) => [...prev, nuovaRiga(chiaveNuova)]);
     setNextKey((k) => k + 1);
+    setTimeout(() => document.getElementById(`farmaco-${chiaveNuova}`)?.focus(), 50);
   };
 
   const togliRiga = (key: number) => {
