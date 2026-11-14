@@ -511,7 +511,93 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
       )}
     </div>
   );
+  // Tabella Altre medicine (antibiotici, creme, gel, ecc.) con una sola colonna
+  const renderAltreTable = (items: any[]) => (
+    <div className="space-y-2">
+      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+        <span>🧴 Altre medicine</span>
+        <span className="text-xs font-normal text-slate-500">({items.length})</span>
+      </h3>
 
+      {items.length === 0 ? (
+        <p className="text-xs text-slate-400 italic py-2">Nessuna voce presente.</p>
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left font-semibold text-slate-600">
+                  <th className="px-3 py-2">Principio Attivo</th>
+                  <th className="px-2 py-2">Dosaggio</th>
+                  <th className="px-2 py-2">Nome Commerciale</th>
+                  <th className="px-2 py-2 text-center">Giacenza</th>
+                  <th className="px-2 py-2 text-center bg-teal-100/60 text-teal-900">
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={allAltreSelected}
+                        onChange={() => handleToggleSelectGroup(altreList, 'selectedAcc', allAltreSelected)}
+                        className="rounded border-teal-300 text-teal-600 focus:ring-teal-200 cursor-pointer"
+                      />
+                      Scatole da ordinare
+                    </label>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ORDINE_CATEGORIE_SPECIALI.map((cat) => {
+                  const righe = items.filter((i) => categoriaSpeciale(i) === cat);
+                  if (righe.length === 0) return null;
+                  return (
+                    <React.Fragment key={cat}>
+                      <tr className="bg-slate-100">
+                        <td colSpan={5} className="px-3 py-1.5 font-bold text-slate-700 uppercase tracking-wide">
+                          {cat} ({righe.length})
+                        </td>
+                      </tr>
+                      {righe.map((item) => (
+                        <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+                          <td className="px-3 py-1.5 font-semibold text-slate-800">{item.active_ingredient}</td>
+                          <td className="px-2 py-1.5 text-slate-600">{item.dosage || '—'}</td>
+                          <td className="px-2 py-1.5 text-slate-500">{item.commercial_name || '—'}</td>
+                          <td className="px-2 py-1.5 text-center font-bold text-teal-700">{item.giacenza}</td>
+                          <td className="px-2 py-1.5 bg-teal-50/40">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <input
+                                type="checkbox"
+                                checked={item.selectedAcc}
+                                onChange={() => handleToggleSelect(item.id, 'selectedAcc')}
+                                className="rounded border-teal-300 text-teal-600 focus:ring-teal-200 cursor-pointer"
+                              />
+                              <button
+                                onClick={() => handleOrderQtyChange(item.id, 'orderAcc', -1)}
+                                className="w-5 h-5 flex items-center justify-center bg-amber-100 hover:bg-amber-200 text-amber-800 rounded font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="w-6 text-center font-bold text-slate-800">
+                                {item.selectedAcc && item.orderAcc > 0 ? item.orderAcc : '—'}
+                              </span>
+                              <button
+                                onClick={() => handleOrderQtyChange(item.id, 'orderAcc', 1)}
+                                className="w-5 h-5 flex items-center justify-center bg-teal-200 hover:bg-teal-300 text-teal-900 rounded font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
   // Tabella Presidi (Invariata)
   const renderPresidiTable = (items: any[]) => (
     <div className="space-y-2">
