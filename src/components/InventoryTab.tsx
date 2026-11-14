@@ -405,9 +405,10 @@ export default function InventoryTab({
   title,
   medications,
   category,
-  onAdd,
+    onAdd,
   onDelete,
   onUpdate,
+  onOpenOrdini,
 }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [ai, setAi] = useState('');
