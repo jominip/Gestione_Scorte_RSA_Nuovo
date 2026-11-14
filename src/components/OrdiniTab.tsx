@@ -766,9 +766,9 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
         <p>✉️ L'ordine è pronto da inviare a: <strong>farmaci.leresidenze@leresidenze.it</strong></p>
       </div>
 
-            {renderFarmaciTable(farmaciList)}
-      {renderAltreTable(altreList)}
-      {renderPresidiTable(presidiList)}
+                  {!soloPresidi && renderFarmaciTable(farmaciList)}
+      {!soloPresidi && renderAltreTable(altreList)}
+      {soloPresidi && renderPresidiTable(presidiList)}
     </div>
   );
 }
