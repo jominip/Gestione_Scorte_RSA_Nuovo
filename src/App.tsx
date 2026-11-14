@@ -246,7 +246,7 @@ function MainApp() {
                 onUpdate={handleUpdate}
               />
             )}
-                       {activeTab === 'presidi' && !ordiniPresidiOpen && (
+                        {activeTab === 'presidi' && !ordiniPresidiOpen && (
               <InventoryTab
                 title="Magazzino Presidi"
                 medications={medications}
