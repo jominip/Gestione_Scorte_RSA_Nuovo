@@ -7,9 +7,11 @@ import { categoriaSpeciale, ORDINE_CATEGORIE_SPECIALI } from '@/lib/topici';
 type Props = {
   medications: Medication[];
   onMedicationUpdated?: () => void;
+  soloPresidi?: boolean;
+  onBack?: () => void;
 };
 
-export default function OrdiniTab({ medications, onMedicationUpdated }: Props) {
+export default function OrdiniTab({ medications, onMedicationUpdated, soloPresidi = false, onBack }: Props) {
   const [search, setSearch] = useState('');
   const [showOnlyToOrder, setShowOnlyToOrder] = useState(true);
   const [showAntibioticOnly, setShowAntibioticOnly] = useState(false);
