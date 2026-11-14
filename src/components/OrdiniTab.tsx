@@ -84,7 +84,7 @@ const [saveError, setSaveError] = useState<string | null>(null);
     });
   }, [processedItems, search, showOnlyToOrder, showAntibioticOnly]);
 
-  const farmaciList = useMemo(() => filteredItems.filter((i) => i.category === 'farmaco' && categoriaSpeciale(i) === null), [filteredItems]);
+    const altreList = useMemo(() => filteredItems.filter((i) => categoriaSpeciale(i) !== null), [filteredItems]);
   const presidiList = useMemo(() => filteredItems.filter((i) => i.category === 'presidio'), [filteredItems]);
 const altreList = useMemo(() => filteredItems.filter((i) => categoriaSpeciale(i) !== null), [filteredItems]);
   const totalToOrderCount = useMemo(() => {
