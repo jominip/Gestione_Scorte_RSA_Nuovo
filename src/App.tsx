@@ -246,7 +246,7 @@ function MainApp() {
                 onUpdate={handleUpdate}
               />
             )}
-            {activeTab === 'presidi' && (
+                       {activeTab === 'presidi' && !ordiniPresidiOpen && (
               <InventoryTab
                 title="Magazzino Presidi"
                 medications={medications}
@@ -254,6 +254,15 @@ function MainApp() {
                 onAdd={handleAdd}
                 onDelete={handleDelete}
                 onUpdate={handleUpdate}
+                onOpenOrdini={() => setOrdiniPresidiOpen(true)}
+              />
+            )}
+            {activeTab === 'presidi' && ordiniPresidiOpen && (
+              <OrdiniTab
+                medications={medications}
+                onMedicationUpdated={fetchMedications}
+                soloPresidi
+                onBack={() => setOrdiniPresidiOpen(false)}
               />
             )}
             {activeTab === 'ordini' && (
