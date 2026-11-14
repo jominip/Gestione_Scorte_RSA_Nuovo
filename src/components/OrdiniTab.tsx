@@ -346,7 +346,7 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
   };
 
   const handleExport = () => {
-        exportOrderExcel(processedItems.filter((i) => !i.hidden));
+            exportOrderExcel(processedItems.filter((i) => !i.hidden && i.category === (soloPresidi ? 'presidio' : 'farmaco')));
   };
 
   // Tabella Farmaci con Pezzi/Scatola modificabile
