@@ -36,7 +36,8 @@ export function exportOrderExcel(orders: any[]) {
     return;
   }
 
-  const farmaciItems = selectedOrders.filter(o => o.category === 'farmaco');
+    const farmaciItems = selectedOrders.filter(o => o.category === 'farmaco' && categoriaSpeciale(o) === null);
+  const altreItems = selectedOrders.filter(o => categoriaSpeciale(o) !== null && o.selectedAcc && (o.orderAcc || 0) > 0);
   const presidiItems = selectedOrders.filter(o => o.category === 'presidio');
 
   if (farmaciItems.length > 0) {
