@@ -344,7 +344,7 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
   };
 
   const handleExport = () => {
-    exportOrderExcel(processedItems);
+        exportOrderExcel(processedItems.filter((i) => !i.hidden));
   };
 
   // Tabella Farmaci con Pezzi/Scatola modificabile
