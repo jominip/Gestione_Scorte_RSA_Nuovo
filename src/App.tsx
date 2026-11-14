@@ -168,10 +168,10 @@ function MainApp() {
 
   const lowStockCount = medications.filter((m) => !m.hidden && needsOrder(m)).length;
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
+    const tabs: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'farmacia', label: 'Armadio Farmacia', icon: <Warehouse className="h-4 w-4" /> },
+    { id: 'ordini', label: 'Ordini farmaci', icon: <ShoppingCart className="h-4 w-4" />, badge: lowStockCount },
     { id: 'presidi', label: 'Magazzino Presidi', icon: <Bandage className="h-4 w-4" /> },
-        { id: 'ordini', label: 'Ordini', icon: <ShoppingCart className="h-4 w-4" />, badge: lowStockCount },
     { id: 'prelievi', label: 'Prelievi', icon: <ClipboardList className="h-4 w-4" /> },
   ];
 
