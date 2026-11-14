@@ -257,7 +257,8 @@ type Props = {
   category: 'farmaco' | 'presidio';
   onAdd: (med: any) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onUpdate: (id: string, updates: any) => Promise<void>;
+    onUpdate: (id: string, updates: any) => Promise<void>;
+  onOpenOrdini?: () => void;
 };
 
 const formatDateTime = (dateString?: string): string => {
