@@ -694,7 +694,16 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Lista Ordine Quindicinale</h2>
+                    <div className="flex items-center gap-3">
+            {soloPresidi && onBack && (
+              <button onClick={onBack} className="btn-secondary text-xs !py-2">
+                ← Indietro
+              </button>
+            )}
+            <h2 className="text-xl font-bold text-slate-900">
+              {soloPresidi ? 'Ordini presidi' : 'Lista Ordine Quindicinale'}
+            </h2>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
