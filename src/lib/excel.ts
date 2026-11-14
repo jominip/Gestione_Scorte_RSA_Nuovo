@@ -64,7 +64,8 @@ export function exportOrderExcel(orders: any[]) {
   }
   if (altreItems.length > 0) {
     const altreRows = altreItems.map(o => ({
-      'Principio Attivo': o.dosage && o.dosage !== '—' ? `${o.active_ingredient} ${o.dosage}` : o.active_ingredient,
+            'Principio Attivo': o.dosage && o.dosage !== '—' ? `${o.active_ingredient} ${o.dosage}` : o.active_ingredient,
+      'Nome Commerciale': o.commercial_name && o.commercial_name !== '—' ? o.commercial_name : '—',
       'Scatole da Ordinare': o.orderAcc
     }));
 
