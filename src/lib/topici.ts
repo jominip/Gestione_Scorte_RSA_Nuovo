@@ -16,7 +16,6 @@ export const ORDINE_CATEGORIE_SPECIALI = [
   'Soluzioni cutanee / Medicazioni',
   'Polveri',
   'Garze',
-  'Spray',
   'Collutori',
   'Soluzioni vaginali',
 ];
@@ -31,12 +30,12 @@ const MAPPA_TIPI: Record<string, string> = {
   'polvere cutanea': 'Polveri',
   'polvere': 'Polveri',
   'garze': 'Garze',
-  'spray': 'Spray',
   'collutorio': 'Collutori',
   'soluzione vaginale': 'Soluzioni vaginali',
 };
 
-// Restituisce il sotto-titolo, oppure null se la voce resta in "Farmaci"
+// Restituisce il sotto-titolo, oppure null se la voce resta in "Farmaci".
+// Gli antibiotici hanno la precedenza. Gli spray (puff) restano in Farmaci.
 export function categoriaSpeciale(med: any): string | null {
   if (med.category !== 'farmaco') return null;
   if (isAntibiotic(med)) return 'Antibiotici';
