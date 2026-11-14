@@ -14,7 +14,7 @@ function MainApp() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('farmacia');
   const [refreshing, setRefreshing] = useState(false);
-
+  const [ordiniPresidiOpen, setOrdiniPresidiOpen] = useState(false);
   const fetchMedications = useCallback(async () => {
     const { data, error } = await supabase
       .from('medications')
