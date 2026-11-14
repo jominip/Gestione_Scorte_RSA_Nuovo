@@ -95,7 +95,7 @@ const altreList = useMemo(() => filteredItems.filter((i) => categoriaSpeciale(i)
 
   // Stato selezione per Presidi
   const allPresidiSelected = presidiList.length > 0 && presidiList.every((i) => i.selectedAcc);
-
+const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.selectedAcc);
   // Selezione "Tutti" riservata solo alla lista di appartenenza (Farmaci o Presidi)
   const handleToggleSelectGroup = (
     targetList: any[],
