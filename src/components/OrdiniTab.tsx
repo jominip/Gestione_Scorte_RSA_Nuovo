@@ -315,7 +315,7 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
   };
 
     const handleMarkOrdered = async (kind: 'acc' | 'non') => {
-    const toMark = farmaciList.filter(
+        const toMark = (kind === 'acc' ? [...farmaciList, ...altreList] : farmaciList).filter(
       (i) =>
         !String(i.id).startsWith('prontuario-') &&
         (kind === 'acc'
