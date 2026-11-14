@@ -84,7 +84,7 @@ const [saveError, setSaveError] = useState<string | null>(null);
 
   const farmaciList = useMemo(() => filteredItems.filter((i) => i.category === 'farmaco'), [filteredItems]);
   const presidiList = useMemo(() => filteredItems.filter((i) => i.category === 'presidio'), [filteredItems]);
-
+const altreList = useMemo(() => filteredItems.filter((i) => categoriaSpeciale(i) !== null), [filteredItems]);
   const totalToOrderCount = useMemo(() => {
     return processedItems.filter((i) => !i.hidden && i.needsOrder).length;
   }, [processedItems]);
