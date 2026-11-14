@@ -1472,15 +1472,15 @@ export default function InventoryTab({
                                   )}
                                 </>
                               )}
-                              {!med.isProntuarioVirtual && (
+                                         {!med.isProntuarioVirtual && (
                                 <>
-                                                                  <button
-                                  onClick={() => openTransfer(med)}
-                                  className="p-1 rounded text-slate-400 hover:text-teal-600 hover:bg-slate-200 transition-colors"
-                                  title="Trasferisci tra piani"
-                                >
-                                  <ArrowRightLeft className="h-3.5 w-3.5" />
-                                </button>
+                                  <button
+                                    onClick={() => openTransfer(med)}
+                                    className="p-1 rounded text-slate-400 hover:text-teal-600 hover:bg-slate-200 transition-colors"
+                                    title="Trasferisci tra piani"
+                                  >
+                                    <ArrowRightLeft className="h-3.5 w-3.5" />
+                                  </button>
                                   <button
                                     onClick={() => handleProtectedAction(() => handleUpdateVirtualOrDb(med, { hidden: !med.hidden }))}
                                     className={`p-1 rounded transition-colors ${
@@ -1490,35 +1490,43 @@ export default function InventoryTab({
                                   >
                                     {med.hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                                   </button>
-
-                                  {isConfirming ? (
-                                    <div className="absolute right-4 z-50 flex items-center gap-1 bg-red-50 p-1 rounded border border-red-200 shadow-lg">
-                                      <span className="text-[10px] text-red-700 font-bold">Eliminare?</span>
-                                      <button
-                                        onClick={() => handleProtectedAction(() => {
-                                          onDelete(med.id);
-                                          setDeleteId(null);
-                                        })}
-                                        className="bg-red-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold"
-                                      >
-                                        Sì
-                                      </button>
-                                      <button
-                                        onClick={() => setDeleteId(null)}
-                                        className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px]"
-                                      >
-                                        No
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleProtectedAction(() => setDeleteId(med.id))}
-                                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                      title="Elimina"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  )}
+                                </>
+                              )}
+                              {isConfirming ? (
+                                <div className="absolute right-4 z-50 flex items-center gap-1 bg-red-50 p-1 rounded border border-red-200 shadow-lg">
+                                  <span className="text-[10px] text-red-700 font-bold">Eliminare?</span>
+                                  <button
+                                    onClick={() => handleProtectedAction(() => {
+                                      const daProntuario = PRONTUARIO_NOMI.has(
+                                        (med.prontuario_key || med.active_ingredient).trim().toLowerCase()
+                                      );
+                                      if (med.isProntuarioVirtual || (category === 'presidio' && daProntuario)) {
+                                        handleUpdateVirtualOrDb(med, { hidden: true });
+                                      } else {
+                                        onDelete(med.id);
+                                      }
+                                      setDeleteId(null);
+                                    })}
+                                    className="bg-red-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                  >
+                                    Sì
+                                  </button>
+                                  <button
+                                    onClick={() => setDeleteId(null)}
+                                    className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px]"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleProtectedAction(() => setDeleteId(med.id))}
+                                  className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Elimina"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
                                 </>
                               )}
                             </div>
