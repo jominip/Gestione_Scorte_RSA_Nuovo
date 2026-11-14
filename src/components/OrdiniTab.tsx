@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Search, Download, Eye, EyeOff, Pill, ShoppingCart } from 'lucide-react';
 import { totalQty, supabase, Medication } from '@/lib/supabase';
 import { exportOrderExcel } from '@/lib/excel';
+import { isAntibiotic } from '@/lib/antibiotics';
 import { categoriaSpeciale, ORDINE_CATEGORIE_SPECIALI } from '@/lib/topici';
-
 type Props = {
   medications: Medication[];
   onMedicationUpdated?: () => void;
