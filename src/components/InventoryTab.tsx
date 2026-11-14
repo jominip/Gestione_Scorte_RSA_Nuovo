@@ -1024,6 +1024,7 @@ export default function InventoryTab({
             <AlertTriangle className="h-4 w-4" />
             <span className="hidden sm:inline">Sotto Soglia</span>
           </button>
+                    {category === 'farmaco' && (
           <button
             onClick={() => setShowAntibioticOnly((v) => !v)}
             className={`btn-secondary whitespace-nowrap ${
@@ -1034,6 +1035,7 @@ export default function InventoryTab({
             <Pill className="h-4 w-4" />
             <span className="hidden sm:inline">Solo Antibiotici</span>
           </button>
+          )}
           <button
             onClick={() => setShowHidden((v) => !v)}
             className={`btn-secondary whitespace-nowrap ${
