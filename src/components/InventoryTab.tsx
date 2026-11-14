@@ -1017,15 +1017,25 @@ export default function InventoryTab({
             <CheckCircle2 className="h-4 w-4" />
             <span className="hidden sm:inline">Carico ordine</span>
           </button>
-          <button
-            onClick={() => setShowLowOnly((v) => !v)}
-            className={`btn-secondary whitespace-nowrap ${
-              showLowOnly ? 'bg-amber-50 border-amber-400 text-amber-700' : ''
-            }`}
-          >
-            <AlertTriangle className="h-4 w-4" />
-            <span className="hidden sm:inline">Sotto Soglia</span>
-          </button>
+                    {category === 'presidio' ? (
+            <button
+              onClick={() => onOpenOrdini && onOpenOrdini()}
+              className="btn-secondary whitespace-nowrap"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span className="hidden sm:inline">Ordini presidi</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLowOnly((v) => !v)}
+              className={`btn-secondary whitespace-nowrap ${
+                showLowOnly ? 'bg-amber-50 border-amber-400 text-amber-700' : ''
+              }`}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <span className="hidden sm:inline">Sotto Soglia</span>
+            </button>
+          )}
                     {category === 'farmaco' && (
           <button
             onClick={() => setShowAntibioticOnly((v) => !v)}
