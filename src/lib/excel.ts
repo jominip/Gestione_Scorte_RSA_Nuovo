@@ -62,7 +62,16 @@ export function exportOrderExcel(orders: any[]) {
       XLSX.utils.book_append_sheet(wb, wsFarmaci, "Farmaci");
     }
   }
+  if (altreItems.length > 0) {
+    const altreRows = altreItems.map(o => ({
+      'Principio Attivo': o.dosage && o.dosage !== '—' ? `${o.active_ingredient} ${o.dosage}` : o.active_ingredient,
+      'Scatole da Ordinare': o.orderAcc
+    }));
 
+    const wsAltre = XLSX.utils.json_to_sheet(altreRows);
+    wsAltre['!cols'] = [{ wch: 45 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(wb, wsAltre, "Altre medicine");
+  }
   if (presidiItems.length > 0) {
     const presidiRows = presidiItems.map(o => {
       const row: Record<string, any> = {
