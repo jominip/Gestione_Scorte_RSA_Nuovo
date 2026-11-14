@@ -70,7 +70,7 @@ export function exportOrderExcel(orders: any[]) {
     }));
 
     const wsAltre = XLSX.utils.json_to_sheet(altreRows);
-    wsAltre['!cols'] = [{ wch: 45 }, { wch: 25 }];
+        wsAltre['!cols'] = [{ wch: 45 }, { wch: 30 }, { wch: 25 }];
     XLSX.utils.book_append_sheet(wb, wsAltre, "Altre medicine");
   }
   if (presidiItems.length > 0) {
