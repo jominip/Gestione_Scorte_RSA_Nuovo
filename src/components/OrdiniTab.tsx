@@ -13,7 +13,7 @@ type Props = {
 
 export default function OrdiniTab({ medications, onMedicationUpdated, soloPresidi = false, onBack }: Props) {
   const [search, setSearch] = useState('');
-  const [showOnlyToOrder, setShowOnlyToOrder] = useState(true);
+    const [showOnlyToOrder, setShowOnlyToOrder] = useState(!soloPresidi);
   const [showAntibioticOnly, setShowAntibioticOnly] = useState(false);
 const [saveError, setSaveError] = useState<string | null>(null);
   // Stato locale blindato per preservare i numeri digitati senza reset improvvisi
