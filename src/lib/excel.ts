@@ -28,7 +28,7 @@ export function exportOrderExcel(orders: any[]) {
   const wb = XLSX.utils.book_new();
 
   const selectedOrders = orders.filter(o => 
-    (o.selectedAcc && (o.orderAcc || 0) > 0) || (o.selectedNonAcc && (o.orderNonAcc || 0) > 0)
+        (o.selectedAcc && (o.orderAcc || 0) > 0) || (categoriaSpeciale(o) === null && o.selectedNonAcc && (o.orderNonAcc || 0) > 0)
   );
 
   if (selectedOrders.length === 0) {
