@@ -236,7 +236,9 @@ const PRONTUARIO_CATEGORIZZATO = [
     ]
   }
 ];
-
+const PRONTUARIO_NOMI = new Set(
+  PRONTUARIO_CATEGORIZZATO.flatMap((g) => g.items.map((i) => i.trim().toLowerCase()))
+);
 const FARMACI_SECTION_ORDER: { [key: string]: number } = {
   'COMPRESSE / CAPSULE': 1,
   'BUSTINE': 2,
