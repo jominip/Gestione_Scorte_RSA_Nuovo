@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { totalQty } from './supabase';
-
+import { categoriaSpeciale } from './topici';
 export interface ExportOptions {
   includeCommercialName?: boolean;
   includeType?: boolean;
