@@ -179,7 +179,6 @@ const PRONTUARIO_CATEGORIZZATO = [
       "Medicazione Alginato Con Argento 10X10 Cm",
       "Medicazione Poliuretano 10X10 Cm",
       "Medicazione Poliuretano 20X20 Cm",
-      "Selfadhesive Soft Cm 10X20 M",
       "Steril Stripes 19X72 Mm",
       "Steril Stripes 6X38 Mm",
       "Steril Stripes 6X75 Mm",
