@@ -655,7 +655,9 @@ export default function InventoryTab({
             section: item.section || catGroup.section,
           });
           dbMap.delete(key);
-        } else {
+                } else if (!eliminati.has(key)) {
+          resultList.push({
+            id: `prontuario-${pCounter++}`,
           resultList.push({
             id: `prontuario-${pCounter++}`,
             active_ingredient: pName,
