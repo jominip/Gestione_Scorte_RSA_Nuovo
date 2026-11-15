@@ -658,8 +658,6 @@ export default function InventoryTab({
                 } else if (!eliminati.has(key)) {
           resultList.push({
             id: `prontuario-${pCounter++}`,
-          resultList.push({
-            id: `prontuario-${pCounter++}`,
             active_ingredient: pName,
             dosage: '—',
             item_type: 'Presidio',
