@@ -26,6 +26,7 @@ export type ItemType =
   | 'Supposte'
   | 'Soluzione cutanea'
   | 'Soluzione vaginale'
+  | 'Spray cutanea'
   | 'Presidio'
   | 'Altro';
 
@@ -50,6 +51,7 @@ export const ITEM_TYPES: ItemType[] = [
   'Supposte',
   'Soluzione cutanea',
   'Soluzione vaginale',
+  'Spray cutanea',
   'Presidio',
   'Altro',
 ];

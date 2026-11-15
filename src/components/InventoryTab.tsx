@@ -617,7 +617,7 @@ export default function InventoryTab({
           sectionName = 'SCIROPPI';
         } else if (t === 'supposte') {
           sectionName = 'SUPPOSTE';
-        } else if (t === 'crema' || t === 'pomata' || t === 'unguento') {
+        } else if (t === 'crema' || t === 'pomata' || t === 'unguento' || t === 'spray cutanea') {
           sectionName = 'CREME / POMATE';
         } else {
           sectionName = (m.item_type || 'ALTRI').toUpperCase();
