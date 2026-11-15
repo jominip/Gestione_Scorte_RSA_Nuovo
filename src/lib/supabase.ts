@@ -24,6 +24,8 @@ export type ItemType =
   | 'Collutorio'
   | 'Garze'
   | 'Supposte'
+  | 'Soluzione cutanea'
+  | 'Soluzione vaginale'
   | 'Presidio'
   | 'Altro';
 
@@ -46,6 +48,8 @@ export const ITEM_TYPES: ItemType[] = [
   'Collutorio',
   'Garze',
   'Supposte',
+  'Soluzione cutanea',
+  'Soluzione vaginale',
   'Presidio',
   'Altro',
 ];
