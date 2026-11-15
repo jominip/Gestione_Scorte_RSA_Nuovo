@@ -565,6 +565,32 @@ export default function InventoryTab({
     setNewSectionOpen(false);
     setSectionError('');
   };
+    const [eliminati, setEliminati] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (category !== 'presidio') return;
+    (async () => {
+      const { data, error } = await supabase.from('prontuario_eliminati').select('chiave');
+      if (error || !data) return;
+      setEliminati(new Set(data.map((r: any) => r.chiave)));
+    })();
+  }, [category]);
+
+  const handleElimina = async (med: any) => {
+    const key = (med.prontuario_key || med.active_ingredient).trim().toLowerCase();
+    const daProntuario = category === 'presidio' && PRONTUARIO_NOMI.has(key);
+    if (daProntuario) {
+      const { error } = await supabase.from('prontuario_eliminati').upsert({ chiave: key });
+      if (error) {
+        alert('Errore: ' + error.message);
+        return;
+      }
+      setEliminati((prev) => new Set(prev).add(key));
+    }
+    if (!med.isProntuarioVirtual) {
+      await onDelete(med.id);
+    }
+  };
   const fullList = useMemo(() => {
     const dbItems = medications.filter((m) => m.category === category);
     
