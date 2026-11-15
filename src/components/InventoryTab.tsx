@@ -1521,15 +1521,8 @@ export default function InventoryTab({
                                 <div className="absolute right-4 z-50 flex items-center gap-1 bg-red-50 p-1 rounded border border-red-200 shadow-lg">
                                   <span className="text-[10px] text-red-700 font-bold">Eliminare?</span>
                                   <button
-                                    onClick={() => handleProtectedAction(() => {
-                                      const daProntuario = PRONTUARIO_NOMI.has(
-                                        (med.prontuario_key || med.active_ingredient).trim().toLowerCase()
-                                      );
-                                      if (med.isProntuarioVirtual || (category === 'presidio' && daProntuario)) {
-                                        handleUpdateVirtualOrDb(med, { hidden: true });
-                                      } else {
-                                        onDelete(med.id);
-                                      }
+                                                                        onClick={() => handleProtectedAction(() => {
+                                      handleElimina(med);
                                       setDeleteId(null);
                                     })}
                                     className="bg-red-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold"
