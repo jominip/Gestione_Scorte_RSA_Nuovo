@@ -695,7 +695,7 @@ export default function InventoryTab({
       .map((it, pos) => ({ it, pos }))
       .sort((a, b) => sectionIdx(a.it.section) - sectionIdx(b.it.section) || a.pos - b.pos)
       .map((x) => x.it);
-    }, [medications, category, sezioniDb]);
+    }, [medications, category, sezioniDb, eliminati]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
