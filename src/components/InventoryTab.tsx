@@ -10,6 +10,7 @@ import { exportMedicationsExcel } from '@/lib/excel';
 import { isAntibiotic } from '@/lib/antibiotics';
 import ScannerModal from '@/components/ScannerModal';
 import ReceiveModal from '@/components/ReceiveModal';
+import NonInUsoTab from '@/components/NonInUsoTab';
 
 const ADMIN_PIN = '1234'; // Puoi cambiare questo PIN quando vuoi
 
