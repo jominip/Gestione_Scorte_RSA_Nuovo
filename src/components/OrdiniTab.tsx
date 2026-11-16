@@ -38,7 +38,7 @@ const [saveError, setSaveError] = useState<string | null>(null);
       const targNonAcc = state.targNonAcc !== undefined ? state.targNonAcc : (med.targ_non_acc ?? 0);
       const packSize = state.packSize !== undefined ? state.packSize : (med.pack_size ?? 1);
 
-      const suggestedAcc = Math.max(0, targAcc - g);
+      const suggestedAcc = med.category === 'presidio' ? (med.order_qty ?? 0) : Math.max(0, targAcc - g);
       const giacenzaResidua = Math.max(0, g - targAcc);
       const suggestedNonAcc = Math.max(0, targNonAcc - giacenzaResidua);
 
@@ -280,6 +280,15 @@ const allAltreSelected = altreList.length > 0 && altreList.every((i) => i.select
       const newVal = Math.max(0, currentVal + delta);
 
       const otherField = field === 'orderAcc' ? 'selectedAcc' : 'selectedNonAcc';
+
+      // Persisti order_qty sul database solo per i presidi (campo "Scatole da ordinare")
+      if (item?.category === 'presidio' && field === 'orderAcc' && !String(id).startsWith('prontuario-')) {
+        supabase
+          .from('medications')
+          .update({ order_qty: newVal })
+          .eq('id', String(id))
+          .then(({ error }) => { if (error) console.error('Errore salvataggio order_qty:', error); });
+      }
 
       return {
         ...prev,

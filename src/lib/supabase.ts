@@ -73,6 +73,7 @@ export type Medication = {
   hidden: boolean;
   targ_acc?: number;      // <-- Accreditato
   targ_non_acc?: number;  // <-- Non accreditato
+  order_qty?: number;     // <-- Scatole da ordinare (presidi)
   created_at: string;
   updated_at?: string;    // <-- Ultimo aggiornamento
 };
@@ -93,6 +94,7 @@ export type MedicationInsert = {
   hidden?: boolean;
   targ_acc?: number;      // <-- Accreditato
   targ_non_acc?: number;  // <-- Non accreditato
+  order_qty?: number;     // <-- Scatole da ordinare (presidi)
   updated_at?: string;
 };
 
@@ -111,6 +113,7 @@ export type MedicationUpdate = {
   hidden?: boolean;
   targ_acc?: number;      // <-- Accreditato
   targ_non_acc?: number;  // <-- Non accreditato
+  order_qty?: number;     // <-- Scatole da ordinare (presidi)
   updated_at?: string;
 };
 
