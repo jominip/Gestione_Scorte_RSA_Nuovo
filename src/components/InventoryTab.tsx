@@ -967,7 +967,11 @@ export default function InventoryTab({
       setSaving(false);
     }
   };
-  const nameCol = category === 'farmaco' ? 'Principio Attivo' : 'Nome Presidio';
+    const nameCol = category === 'farmaco' ? 'Principio Attivo' : 'Nome Presidio';
+
+  if (showNonInUso && category === 'farmaco') {
+    return <NonInUsoTab onBack={() => setShowNonInUso(false)} />;
+  }
 
   return (
     <div className="space-y-4">
