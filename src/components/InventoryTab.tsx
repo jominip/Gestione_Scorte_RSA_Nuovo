@@ -1101,6 +1101,17 @@ export default function InventoryTab({
             <span className="hidden sm:inline">Stampa</span>
           </button>
 
+                    {category === 'farmaco' && (
+            <button
+              onClick={() => setShowNonInUso(true)}
+              className="btn-secondary whitespace-nowrap"
+              title="Farmaci messi a parte (decessi, dimissioni, sospensioni)"
+            >
+              <EyeOff className="h-4 w-4" />
+              <span className="hidden sm:inline">Farmaci non in uso</span>
+            </button>
+          )}
+
           {/* Pulsante Sblocca / Blocca Modifiche con PIN */}
           {!isUnlocked ? (
             <button
