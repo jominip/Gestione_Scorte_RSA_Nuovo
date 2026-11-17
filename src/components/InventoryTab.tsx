@@ -435,7 +435,9 @@ export default function InventoryTab({
     const [includeType, setIncludeType] = useState(true);
    const [showNonInUso, setShowNonInUso] = useState(false);
   const [moveNonInUso, setMoveNonInUso] = useState<any | null>(null);
-  const [moveError, setMoveError] = useState('');
+    const [moveError, setMoveError] = useState('');
+  const [moveFrom, setMoveFrom] = useState('qty_pt');
+  const [moveQty, setMoveQty] = useState('1');
 
   const [totSortOrder, setTotSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
 
