@@ -244,7 +244,46 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     return cifre.length > 2 ? cifre.slice(0, 2) + '/' + cifre.slice(2) : cifre;
   };
 
-      const apriPiu = (r: Riga) => {
+        const apriMeno = (r: Riga) => {
+    if (r.quantita <= 0) return;
+    const lista = [...(r.scadenze || [])].sort((a, b) => a.data.localeCompare(b.data));
+    if (lista.length === 0) {
+      cambiaQuantita(r, r.quantita - 1);
+      return;
+    }
+    setMenoScelta(lista[0].data);
+    setMenoErr('');
+    setMenoRiga(r);
+  };
+
+  const confermaMeno = async () => {
+    if (!menoRiga) return;
+    let lista = (menoRiga.scadenze || []).map((s) => ({ ...s }));
+
+    if (menoScelta !== 'senza') {
+      const esiste = lista.find((s) => s.data === menoScelta);
+      if (esiste) esiste.qta -= 1;
+      lista = lista.filter((s) => s.qta > 0);
+    }
+
+    const { error } = await supabase
+      .from('farmaci_non_in_uso')
+      .update({
+        quantita: Math.max(0, menoRiga.quantita - 1),
+        scadenze: lista,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', menoRiga.id);
+    if (error) {
+      setMenoErr('Salvataggio NON riuscito: ' + error.message);
+      return;
+    }
+    setMenoRiga(null);
+    setMenoErr('');
+    carica();
+  };
+
+  const apriPiu = (r: Riga) => {
     const lista = [...(r.scadenze || [])].sort((a, b) => a.data.localeCompare(b.data));
     setPiuScelta(lista.length > 0 ? lista[0].data : 'nuova');
     setPiuData('');
