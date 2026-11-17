@@ -1550,8 +1550,22 @@ export default function InventoryTab({
                                     className="p-1 rounded text-slate-400 hover:text-teal-600 hover:bg-slate-200 transition-colors"
                                     title="Trasferisci tra piani"
                                   >
-                                    <ArrowRightLeft className="h-3.5 w-3.5" />
+                                                                        <ArrowRightLeft className="h-3.5 w-3.5" />
                                   </button>
+                                  {category === 'farmaco' && (
+                                    <button
+                                      onClick={() =>
+                                        handleProtectedAction(() => {
+                                          setMoveError('');
+                                          setMoveNonInUso(med);
+                                        })
+                                      }
+                                      className="p-1 rounded text-slate-400 hover:text-amber-600 hover:bg-slate-200 transition-colors"
+                                      title="Sposta in Farmaci non in uso"
+                                    >
+                                      <FolderInput className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => handleProtectedAction(() => handleUpdateVirtualOrDb(med, { hidden: !med.hidden }))}
                                     className={`p-1 rounded transition-colors ${
