@@ -506,7 +506,7 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
                     </button>
                     <span className="w-8 text-center font-bold">{r.quantita}</span>
                     <button
-                      onClick={() => cambiaQuantita(r, r.quantita + 1)}
+                                            onClick={() => apriPiu(r)}
                       className="w-7 h-7 rounded border border-gray-300"
                     >
                       +
