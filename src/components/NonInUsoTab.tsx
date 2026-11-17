@@ -226,7 +226,7 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
   };
 
   const apriScadenze = (r: Riga) => {
-    setScadLista((r.scadenze || []).map((s) => ({ data: s.data, qta: String(s.qta) })));
+        setScadLista((r.scadenze || []).map((s) => ({ data: formattaScad(s.data), qta: String(s.qta) })));
     setScadErr('');
     setScadRiga(r);
   };
