@@ -494,6 +494,9 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
             value={nuovo.quantita}
             onChange={(e) => setNuovo({ ...nuovo, quantita: Number(e.target.value) })}
           />
+                    {formErr && (
+            <p className="col-span-2 md:col-span-5 text-sm font-semibold text-red-600">{formErr}</p>
+          )}
           <div className="col-span-2 md:col-span-5 flex gap-2">
             <button onClick={aggiungi} className="px-4 py-2 rounded-lg bg-teal-700 text-white text-sm font-medium">
               Salva
