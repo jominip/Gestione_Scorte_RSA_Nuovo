@@ -357,7 +357,7 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
           <tbody>
             {visibili.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-gray-400">
+                <td colSpan={8} className="p-6 text-center text-gray-400">
                   Nessun farmaco. Premi "+ Aggiungi".
                 </td>
               </tr>
