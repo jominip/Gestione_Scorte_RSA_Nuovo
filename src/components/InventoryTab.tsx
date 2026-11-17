@@ -971,28 +971,63 @@ export default function InventoryTab({
       setSaving(false);
     }
   };
-      const handleMoveToNonInUso = async () => {
+   const handleMoveToNonInUso = async () => {
     if (!moveNonInUso) return;
-    const med = moveNonInUso;
+    const live = medications.find((m) => m.id === moveNonInUso.id) || moveNonInUso;
+    const n = parseInt(moveQty, 10);
+    const disponibili = live[moveFrom] || 0;
+    const fromLabel = FLOORS.find((f) => f.key === moveFrom)?.label || '';
+
+    if (isNaN(n) || n < 1) { setMoveError('Scrivi una quantità di almeno 1.'); return; }
+    if (n > disponibili) { setMoveError(`Su ${fromLabel} ci sono solo ${disponibili} scatole.`); return; }
+
     try {
       setSaving(true);
-      const { error } = await supabase.from('farmaci_non_in_uso').insert({
-        principio_attivo: med.active_ingredient,
-        dosaggio: med.dosage && med.dosage !== '—' ? med.dosage : null,
-        tipo: med.item_type || null,
-        nome_commerciale: med.commercial_name && med.commercial_name !== '—' ? med.commercial_name : null,
-        quantita: totalQty(med),
-      });
-      if (error) {
-        setMoveError('Trasferimento NON riuscito: ' + error.message);
+      const nowIso = new Date().toISOString();
+      const dos = live.dosage && live.dosage !== '—' ? live.dosage : null;
+      const nome = live.commercial_name && live.commercial_name !== '—' ? live.commercial_name : null;
+
+      const { data: esistenti, error: errCerca } = await supabase
+        .from('farmaci_non_in_uso')
+        .select('*')
+        .eq('principio_attivo', live.active_ingredient);
+      if (errCerca) {
+        setMoveError('Trasferimento NON riuscito: ' + errCerca.message);
         return;
       }
-      await onDelete(med.id);
+      const uguale = (esistenti || []).find(
+        (r: any) => (r.dosaggio || '') === (dos || '') && (r.tipo || '') === (live.item_type || '')
+      );
+
+      if (uguale) {
+        const { error } = await supabase
+          .from('farmaci_non_in_uso')
+          .update({ quantita: (uguale.quantita || 0) + n, updated_at: nowIso })
+          .eq('id', uguale.id);
+        if (error) {
+          setMoveError('Trasferimento NON riuscito: ' + error.message);
+          return;
+        }
+      } else {
+        const { error } = await supabase.from('farmaci_non_in_uso').insert({
+          principio_attivo: live.active_ingredient,
+          dosaggio: dos,
+          tipo: live.item_type || null,
+          nome_commerciale: nome,
+          quantita: n,
+        });
+        if (error) {
+          setMoveError('Trasferimento NON riuscito: ' + error.message);
+          return;
+        }
+      }
+
+      await onUpdate(live.id, { [moveFrom]: disponibili - n, updated_at: nowIso });
       setMoveNonInUso(null);
       setMoveError('');
     } catch (err) {
       console.error('Errore spostamento non in uso:', err);
-      setMoveError('Trasferimento non riuscito. Riprova.');
+      setMoveError('Trasferimento non riuscito. Controlla le quantità prima di riprovare.');
     } finally {
       setSaving(false);
     }
