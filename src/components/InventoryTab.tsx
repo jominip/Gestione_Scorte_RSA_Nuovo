@@ -1593,7 +1593,10 @@ export default function InventoryTab({
                                     <button
                                       onClick={() =>
                                         handleProtectedAction(() => {
-                                          setMoveError('');
+                                                                                    setMoveError('');
+                                          const primoConScorte = FLOORS.find((f) => (med[f.key] || 0) > 0);
+                                          setMoveFrom(primoConScorte ? primoConScorte.key : 'qty_pt');
+                                          setMoveQty('1');
                                           setMoveNonInUso(med);
                                         })
                                       }
