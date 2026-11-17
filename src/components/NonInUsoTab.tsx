@@ -427,6 +427,87 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
         </table>
       </div>
 
+      {scadRiga && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Scadenze</h3>
+              <button onClick={() => setScadRiga(null)} className="text-slate-400 hover:text-slate-600">
+                ✕
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              {scadRiga.principio_attivo} {scadRiga.dosaggio || ''}
+            </p>
+            <p className="text-xs text-slate-600">
+              Scatole in totale: {scadRiga.quantita} · con scadenza indicata:{' '}
+              {scadLista.reduce((somma, s) => somma + (parseInt(s.qta, 10) || 0), 0)}
+            </p>
+            <div className="space-y-2">
+              {scadLista.length === 0 && (
+                <p className="text-xs text-slate-400">Nessuna scadenza. Premi "+ Aggiungi scadenza".</p>
+              )}
+              {scadLista.map((s, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="month"
+                    value={s.data}
+                    onChange={(e) => {
+                      const copia = [...scadLista];
+                      copia[i] = { ...copia[i], data: e.target.value };
+                      setScadLista(copia);
+                      setScadErr('');
+                    }}
+                    className="border rounded px-2 py-2 text-sm flex-1"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    value={s.qta}
+                    onChange={(e) => {
+                      const copia = [...scadLista];
+                      copia[i] = { ...copia[i], qta: e.target.value };
+                      setScadLista(copia);
+                      setScadErr('');
+                    }}
+                    className="border rounded px-2 py-2 text-sm w-16"
+                    title="Scatole"
+                  />
+                  <button
+                    onClick={() => setScadLista(scadLista.filter((_, k) => k !== i))}
+                    className="text-gray-400 hover:text-red-600"
+                    title="Togli riga"
+                  >
+                    🗑
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setScadLista([...scadLista, { data: '', qta: '1' }])}
+              className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+            >
+              + Aggiungi scadenza
+            </button>
+            {scadErr && <p className="text-xs font-semibold text-red-600">{scadErr}</p>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setScadRiga(null)}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={salvaScadenze}
+                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-sm font-medium"
+              >
+                Salva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {trasferisci && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
