@@ -80,7 +80,8 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
 
   const [menoRiga, setMenoRiga] = useState<Riga | null>(null);
   const [menoScelta, setMenoScelta] = useState('senza');
-  const [menoErr, setMenoErr] = useState('');
+    const [menoErr, setMenoErr] = useState('');
+  const [confermaId, setConfermaId] = useState<string | null>(null);
 
   const carica = async () => {
     const { data, error } = await supabase
