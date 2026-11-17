@@ -516,6 +516,81 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
         </table>
       </div>
 
+            {modRiga && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-3 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Modifica riga</h3>
+              <button onClick={() => setModRiga(null)} className="text-slate-400 hover:text-slate-600">
+                ✕
+              </button>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Principio attivo</label>
+              <input
+                className="border rounded px-2 py-2 text-sm w-full"
+                value={modForm.principio_attivo}
+                onChange={(e) => { setModForm({ ...modForm, principio_attivo: e.target.value }); setModErr(''); }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Dosaggio</label>
+              <input
+                className="border rounded px-2 py-2 text-sm w-full"
+                value={modForm.dosaggio}
+                onChange={(e) => { setModForm({ ...modForm, dosaggio: e.target.value }); setModErr(''); }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Tipo</label>
+              <select
+                className="border rounded px-2 py-2 text-sm w-full"
+                value={modForm.tipo}
+                onChange={(e) => { setModForm({ ...modForm, tipo: e.target.value }); setModErr(''); }}
+              >
+                {!ITEM_TYPES.includes(modForm.tipo) && <option value={modForm.tipo}>{modForm.tipo}</option>}
+                {ITEM_TYPES.map((t: string) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Nome commerciale</label>
+              <input
+                className="border rounded px-2 py-2 text-sm w-full"
+                value={modForm.nome_commerciale}
+                onChange={(e) => { setModForm({ ...modForm, nome_commerciale: e.target.value }); setModErr(''); }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Quantità (scatole)</label>
+              <input
+                type="number"
+                min={0}
+                className="border rounded px-2 py-2 text-sm w-full"
+                value={modForm.quantita}
+                onChange={(e) => { setModForm({ ...modForm, quantita: e.target.value }); setModErr(''); }}
+              />
+            </div>
+            {modErr && <p className="text-xs font-semibold text-red-600">{modErr}</p>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setModRiga(null)}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={salvaModifica}
+                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-sm font-medium"
+              >
+                Salva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {scadRiga && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
