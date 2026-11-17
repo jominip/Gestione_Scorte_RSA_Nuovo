@@ -485,6 +485,13 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
                 </td>
                 <td className="p-3 text-xs text-gray-500">{formatta(r.updated_at)}</td>
                                 <td className="p-3 text-center whitespace-nowrap">
+                                    <button
+                    onClick={() => apriModifica(r)}
+                    className="mr-2 text-gray-400 hover:text-teal-700"
+                    title="Modifica riga"
+                  >
+                    ✏️
+                  </button>
                   <button
                     onClick={() => apriScadenze(r)}
                     className="mr-2 text-gray-400 hover:text-teal-700"
