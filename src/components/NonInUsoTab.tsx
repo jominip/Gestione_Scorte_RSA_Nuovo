@@ -348,7 +348,8 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
               <th className="p-3">Dosaggio</th>
               <th className="p-3">Tipo</th>
               <th className="p-3">Nome Commerciale</th>
-              <th className="p-3 text-center">Non in uso</th>
+                            <th className="p-3 text-center">Non in uso</th>
+              <th className="p-3">Scadenze</th>
               <th className="p-3">Aggiornato</th>
               <th className="p-3 text-center">Azioni</th>
             </tr>
