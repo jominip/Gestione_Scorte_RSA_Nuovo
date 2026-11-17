@@ -235,6 +235,55 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     return cifre.length > 2 ? cifre.slice(0, 2) + '/' + cifre.slice(2) : cifre;
   };
 
+    const apriModifica = (r: Riga) => {
+    setModForm({
+      principio_attivo: r.principio_attivo || '',
+      dosaggio: r.dosaggio || '',
+      tipo: r.tipo || 'Compresse',
+      nome_commerciale: r.nome_commerciale || '',
+      quantita: String(r.quantita),
+    });
+    setModErr('');
+    setModRiga(r);
+  };
+
+  const salvaModifica = async () => {
+    if (!modRiga) return;
+    const pa = modForm.principio_attivo.trim();
+    const n = parseInt(modForm.quantita, 10);
+    if (!pa) { setModErr('Scrivi il principio attivo.'); return; }
+    if (isNaN(n) || n < 0) { setModErr('La quantità deve essere 0 o più.'); return; }
+    const doppione = righe.find(
+      (x) =>
+        x.id !== modRiga.id &&
+        norm(x.principio_attivo) === norm(pa) &&
+        norm(x.dosaggio) === norm(modForm.dosaggio) &&
+        norm(x.tipo) === norm(modForm.tipo)
+    );
+    if (doppione) {
+      setModErr('Esiste già un\'altra riga con stesso principio attivo, dosaggio e tipo.');
+      return;
+    }
+    const { error } = await supabase
+      .from('farmaci_non_in_uso')
+      .update({
+        principio_attivo: pa,
+        dosaggio: modForm.dosaggio.trim() || null,
+        tipo: modForm.tipo || null,
+        nome_commerciale: modForm.nome_commerciale.trim() || null,
+        quantita: n,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', modRiga.id);
+    if (error) {
+      setModErr('Salvataggio NON riuscito: ' + error.message);
+      return;
+    }
+    setModRiga(null);
+    setModErr('');
+    carica();
+  };
+
   const apriScadenze = (r: Riga) => {
         setScadLista((r.scadenze || []).map((s) => ({ data: formattaScad(s.data), qta: String(s.qta) })));
     setScadErr('');
