@@ -433,7 +433,9 @@ export default function InventoryTab({
   const [floorFilter, setFloorFilter] = useState<string>('all');
   const [includeCommercialName, setIncludeCommercialName] = useState(true);
     const [includeType, setIncludeType] = useState(true);
-  const [showNonInUso, setShowNonInUso] = useState(false);
+   const [showNonInUso, setShowNonInUso] = useState(false);
+  const [moveNonInUso, setMoveNonInUso] = useState<any | null>(null);
+  const [moveError, setMoveError] = useState('');
 
   const [totSortOrder, setTotSortOrder] = useState<'none' | 'asc' | 'desc'>('none');
 
