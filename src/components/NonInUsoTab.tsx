@@ -542,7 +542,7 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
                 <td className="p-3">
                   <div className="flex items-center justify-center gap-2">
                     <button
-                      onClick={() => cambiaQuantita(r, r.quantita - 1)}
+                                            onClick={() => apriMeno(r)}
                       className="w-7 h-7 rounded border border-gray-300"
                     >
                       −
