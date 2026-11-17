@@ -411,7 +411,13 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
                       .map((s, i) => (
                         <div
                           key={i}
-                          className={s.data < oggiMese ? 'text-red-600 font-semibold' : 'text-gray-700'}
+                                                    className={
+                            statoScad(s.data) === 'scaduta'
+                              ? 'text-red-700 font-bold bg-red-100 rounded px-1 mb-0.5'
+                              : statoScad(s.data) === 'in_scadenza'
+                              ? 'text-orange-800 font-bold bg-orange-200 rounded px-1 mb-0.5'
+                              : 'text-gray-700'
+                          }
                         >
                           {formattaScad(s.data)} · {s.qta} scat.
                         </div>
