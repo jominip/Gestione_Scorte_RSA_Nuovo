@@ -102,48 +102,56 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     carica();
   }, []);
 
-      const aggiungi = async () => {
+        const aggiungi = async () => {
     setFormErr('');
     if (!nuovo.principio_attivo.trim()) {
       setFormErr('Scrivi il principio attivo.');
       return;
     }
+
+    const scadPulite: { data: string; qta: number }[] = [];
+    for (const s of nuoveScad) {
+      const m = s.data.match(/^(\d{2})\/(\d{2})$/);
+      const mese = m ? parseInt(m[1], 10) : 0;
+      const n = parseInt(s.qta, 10);
+      if (!m || mese < 1 || mese > 12) {
+        setFormErr('Scrivi la scadenza come MM/AA, per esempio 03/27.');
+        return;
+      }
+      if (isNaN(n) || n < 1) {
+        setFormErr('In ogni scadenza scrivi almeno 1 scatola.');
+        return;
+      }
+      const chiave = '20' + m[2] + '-' + m[1];
+      const gia = scadPulite.find((x) => x.data === chiave);
+      if (gia) gia.qta += n;
+      else scadPulite.push({ data: chiave, qta: n });
+    }
+    scadPulite.sort((a, b) => a.data.localeCompare(b.data));
+    const totaleScad = scadPulite.reduce((t, s) => t + s.qta, 0);
+    const quantitaFinale = Number(nuovo.quantita) > 0 ? Number(nuovo.quantita) : totaleScad;
+
     try {
       const { error } = await supabase.from('farmaci_non_in_uso').insert({
         principio_attivo: nuovo.principio_attivo.trim(),
         dosaggio: nuovo.dosaggio.trim() || null,
         tipo: nuovo.tipo || null,
         nome_commerciale: nuovo.nome_commerciale.trim() || null,
-        quantita: Number(nuovo.quantita) || 0,
+        quantita: quantitaFinale,
+        scadenze: scadPulite,
       });
       if (error) {
         setFormErr('Salvataggio NON riuscito: ' + error.message);
         return;
       }
       setNuovo({ principio_attivo: '', dosaggio: '', tipo: 'Compresse', nome_commerciale: '', quantita: 0 });
+      setNuoveScad([]);
       setMostraForm(false);
       setFormErr('');
       carica();
     } catch (err: any) {
       setFormErr('Salvataggio NON riuscito: ' + (err?.message || 'errore sconosciuto'));
     }
-  };
-          const elimina = async (r: Riga) => {
-    const { data, error } = await supabase
-      .from('farmaci_non_in_uso')
-      .delete()
-      .eq('id', r.id)
-      .select();
-    if (error) {
-      setErrore('Eliminazione NON riuscita: ' + error.message);
-      return;
-    }
-    if (!data || data.length === 0) {
-      setErrore('Eliminazione NON riuscita: il database non ha cancellato la riga (permessi). Controlla in Supabase che RLS sia disattivata su farmaci_non_in_uso.');
-      return;
-    }
-    setErrore('');
-    carica();
   };
 
   const cambiaQuantita = async (r: Riga, nuova: number) => {
