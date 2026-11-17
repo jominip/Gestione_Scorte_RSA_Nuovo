@@ -61,7 +61,17 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
 
   const [scadRiga, setScadRiga] = useState<Riga | null>(null);
   const [scadLista, setScadLista] = useState<{ data: string; qta: string }[]>([]);
-  const [scadErr, setScadErr] = useState('');
+    const [scadErr, setScadErr] = useState('');
+
+  const [modRiga, setModRiga] = useState<Riga | null>(null);
+  const [modForm, setModForm] = useState({
+    principio_attivo: '',
+    dosaggio: '',
+    tipo: 'Compresse',
+    nome_commerciale: '',
+    quantita: '0',
+  });
+  const [modErr, setModErr] = useState('');
 
   const carica = async () => {
     const { data, error } = await supabase
