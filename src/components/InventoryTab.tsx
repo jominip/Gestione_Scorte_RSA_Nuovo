@@ -969,7 +969,34 @@ export default function InventoryTab({
       setSaving(false);
     }
   };
-    const nameCol = category === 'farmaco' ? 'Principio Attivo' : 'Nome Presidio';
+      const handleMoveToNonInUso = async () => {
+    if (!moveNonInUso) return;
+    const med = moveNonInUso;
+    try {
+      setSaving(true);
+      const { error } = await supabase.from('farmaci_non_in_uso').insert({
+        principio_attivo: med.active_ingredient,
+        dosaggio: med.dosage && med.dosage !== '—' ? med.dosage : null,
+        tipo: med.item_type || null,
+        nome_commerciale: med.commercial_name && med.commercial_name !== '—' ? med.commercial_name : null,
+        quantita: totalQty(med),
+      });
+      if (error) {
+        setMoveError('Trasferimento NON riuscito: ' + error.message);
+        return;
+      }
+      await onDelete(med.id);
+      setMoveNonInUso(null);
+      setMoveError('');
+    } catch (err) {
+      console.error('Errore spostamento non in uso:', err);
+      setMoveError('Trasferimento non riuscito. Riprova.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const nameCol = category === 'farmaco' ? 'Principio Attivo' : 'Nome Presidio';
 
   if (showNonInUso && category === 'farmaco') {
     return <NonInUsoTab onBack={() => setShowNonInUso(false)} />;
