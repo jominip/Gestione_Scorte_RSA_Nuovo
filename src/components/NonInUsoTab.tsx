@@ -611,7 +611,66 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
         </table>
       </div>
 
-                 {piuRiga && (
+                       {menoRiga && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-3 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Togli una scatola</h3>
+              <button onClick={() => setMenoRiga(null)} className="text-slate-400 hover:text-slate-600">
+                ✕
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              {menoRiga.principio_attivo} {menoRiga.dosaggio || ''}
+            </p>
+            <p className="text-xs text-slate-600">Da quale scadenza togli la scatola?</p>
+
+            {[...(menoRiga.scadenze || [])]
+              .sort((a, b) => a.data.localeCompare(b.data))
+              .map((s) => (
+                <label key={s.data} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="meno"
+                    checked={menoScelta === s.data}
+                    onChange={() => { setMenoScelta(s.data); setMenoErr(''); }}
+                  />
+                  <span>
+                    {formattaScad(s.data)} <span className="text-gray-500">({s.qta} scat.)</span>
+                  </span>
+                </label>
+              ))}
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="meno"
+                checked={menoScelta === 'senza'}
+                onChange={() => { setMenoScelta('senza'); setMenoErr(''); }}
+              />
+              <span>Senza scadenza</span>
+            </label>
+
+            {menoErr && <p className="text-xs font-semibold text-red-600">{menoErr}</p>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setMenoRiga(null)}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confermaMeno}
+                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-sm font-medium"
+              >
+                Togli
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {piuRiga && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-3 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
