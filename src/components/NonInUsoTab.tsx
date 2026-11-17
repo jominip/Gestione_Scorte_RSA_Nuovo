@@ -127,7 +127,8 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
       setFormErr('Salvataggio NON riuscito: ' + (err?.message || 'errore sconosciuto'));
     }
   };
-        const { data, error } = await supabase
+          const elimina = async (r: Riga) => {
+    const { data, error } = await supabase
       .from('farmaci_non_in_uso')
       .delete()
       .eq('id', r.id)
