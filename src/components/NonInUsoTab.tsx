@@ -57,7 +57,11 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
   const [piano, setPiano] = useState('qty_pt');
   const [qta, setQta] = useState('1');
   const [trErr, setTrErr] = useState('');
-  const [saving, setSaving] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+  const [scadRiga, setScadRiga] = useState<Riga | null>(null);
+  const [scadLista, setScadLista] = useState<{ data: string; qta: string }[]>([]);
+  const [scadErr, setScadErr] = useState('');
 
   const carica = async () => {
     const { data, error } = await supabase
