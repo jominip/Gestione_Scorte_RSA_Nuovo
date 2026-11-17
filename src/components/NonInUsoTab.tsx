@@ -203,6 +203,42 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     }
   };
 
+    const oggiMese = new Date().toISOString().slice(0, 7);
+
+  const formattaScad = (s: string) => {
+    const [a, m] = s.split('-');
+    return m + '/' + a;
+  };
+
+  const apriScadenze = (r: Riga) => {
+    setScadLista((r.scadenze || []).map((s) => ({ data: s.data, qta: String(s.qta) })));
+    setScadErr('');
+    setScadRiga(r);
+  };
+
+  const salvaScadenze = async () => {
+    if (!scadRiga) return;
+    const pulita: { data: string; qta: number }[] = [];
+    for (const s of scadLista) {
+      const n = parseInt(s.qta, 10);
+      if (!s.data) { setScadErr('Scrivi mese e anno in ogni riga (o togli la riga).'); return; }
+      if (isNaN(n) || n < 1) { setScadErr('In ogni riga scrivi almeno 1 scatola.'); return; }
+      pulita.push({ data: s.data, qta: n });
+    }
+    pulita.sort((a, b) => a.data.localeCompare(b.data));
+    const { error } = await supabase
+      .from('farmaci_non_in_uso')
+      .update({ scadenze: pulita })
+      .eq('id', scadRiga.id);
+    if (error) {
+      setScadErr('Salvataggio NON riuscito: ' + error.message);
+      return;
+    }
+    setScadRiga(null);
+    setScadErr('');
+    carica();
+  };
+
   const visibili = righe.filter((r) => {
     const t = cerca.trim().toLowerCase();
     if (!t) return true;
