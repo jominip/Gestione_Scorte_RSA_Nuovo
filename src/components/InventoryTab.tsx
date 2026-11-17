@@ -1840,38 +1840,61 @@ export default function InventoryTab({
           </div>
         </div>
       )}
-            {moveNonInUso && (
-        <div className="no-print fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">Sposta in "Farmaci non in uso"</h3>
-              <button
-                onClick={() => setMoveNonInUso(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-sm font-semibold text-slate-800">
-              {moveNonInUso.active_ingredient}{' '}
-              {moveNonInUso.dosage && moveNonInUso.dosage !== '—' ? moveNonInUso.dosage : ''}
-            </p>
-            <p className="text-xs text-slate-600">
-              Il farmaco sparisce dall'Armadio Farmacia e va in "Farmaci non in uso" con la quantità totale di{' '}
-              <span className="font-bold">{totalQty(moveNonInUso)}</span> scatole.
-            </p>
-            {moveError && <p className="text-xs font-semibold text-red-600">{moveError}</p>}
-            <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setMoveNonInUso(null)} className="btn-secondary text-xs">
-                Annulla
-              </button>
-              <button onClick={handleMoveToNonInUso} disabled={saving} className="btn-primary text-xs">
-                {saving ? 'Salvataggio...' : 'Sposta'}
-              </button>
+                  {moveNonInUso && (() => {
+        const liveMove = medications.find((m) => m.id === moveNonInUso.id) || moveNonInUso;
+        return (
+          <div className="no-print fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-900">Sposta in "Farmaci non in uso"</h3>
+                <button
+                  onClick={() => setMoveNonInUso(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="text-sm font-semibold text-slate-800">
+                {liveMove.active_ingredient}{' '}
+                {liveMove.dosage && liveMove.dosage !== '—' ? liveMove.dosage : ''}
+              </p>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Da quale piano</label>
+                <select
+                  value={moveFrom}
+                  onChange={(e) => { setMoveFrom(e.target.value); setMoveError(''); }}
+                  className="input text-xs cursor-pointer"
+                >
+                  {FLOORS.map((f) => (
+                    <option key={f.key} value={f.key}>
+                      {f.label} - {liveMove[f.key] || 0} scatole
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Quante scatole</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={moveQty}
+                  onChange={(e) => { setMoveQty(e.target.value); setMoveError(''); }}
+                  className="input text-xs"
+                />
+              </div>
+              {moveError && <p className="text-xs font-semibold text-red-600">{moveError}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <button onClick={() => setMoveNonInUso(null)} className="btn-secondary text-xs">
+                  Annulla
+                </button>
+                <button onClick={handleMoveToNonInUso} disabled={saving} className="btn-primary text-xs">
+                  {saving ? 'Salvataggio...' : 'Sposta'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
       {transferLive && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
