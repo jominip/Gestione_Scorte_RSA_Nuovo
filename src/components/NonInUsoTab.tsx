@@ -236,9 +236,11 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     const pulita: { data: string; qta: number }[] = [];
     for (const s of scadLista) {
       const n = parseInt(s.qta, 10);
-      if (!s.data) { setScadErr('Scrivi mese e anno in ogni riga (o togli la riga).'); return; }
+            const m = s.data.match(/^(\d{2})\/(\d{2})$/);
+      const mese = m ? parseInt(m[1], 10) : 0;
+      if (!m || mese < 1 || mese > 12) { setScadErr('Scrivi la scadenza come MM/AA, per esempio 03/27.'); return; }
       if (isNaN(n) || n < 1) { setScadErr('In ogni riga scrivi almeno 1 scatola.'); return; }
-      pulita.push({ data: s.data, qta: n });
+      pulita.push({ data: '20' + m[2] + '-' + m[1], qta: n });
     }
     pulita.sort((a, b) => a.data.localeCompare(b.data));
     const { error } = await supabase
