@@ -1036,7 +1036,14 @@ export default function InventoryTab({
   const nameCol = category === 'farmaco' ? 'Principio Attivo' : 'Nome Presidio';
 
   if (showNonInUso && category === 'farmaco') {
-    return <NonInUsoTab onBack={() => setShowNonInUso(false)} />;
+        return (
+      <NonInUsoTab
+        medications={medications}
+        onAdd={onAdd}
+        onUpdate={onUpdate}
+        onBack={() => setShowNonInUso(false)}
+      />
+    );
   }
 
   return (
