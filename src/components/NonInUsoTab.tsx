@@ -101,12 +101,32 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     carica();
   }, []);
 
-    const aggiungi = async () => {
+      const aggiungi = async () => {
     setFormErr('');
     if (!nuovo.principio_attivo.trim()) {
       setFormErr('Scrivi il principio attivo.');
       return;
     }
+    try {
+      const { error } = await supabase.from('farmaci_non_in_uso').insert({
+        principio_attivo: nuovo.principio_attivo.trim(),
+        dosaggio: nuovo.dosaggio.trim() || null,
+        tipo: nuovo.tipo || null,
+        nome_commerciale: nuovo.nome_commerciale.trim() || null,
+        quantita: Number(nuovo.quantita) || 0,
+      });
+      if (error) {
+        setFormErr('Salvataggio NON riuscito: ' + error.message);
+        return;
+      }
+      setNuovo({ principio_attivo: '', dosaggio: '', tipo: 'Compresse', nome_commerciale: '', quantita: 0 });
+      setMostraForm(false);
+      setFormErr('');
+      carica();
+    } catch (err: any) {
+      setFormErr('Salvataggio NON riuscito: ' + (err?.message || 'errore sconosciuto'));
+    }
+  };
         const { data, error } = await supabase
       .from('farmaci_non_in_uso')
       .delete()
