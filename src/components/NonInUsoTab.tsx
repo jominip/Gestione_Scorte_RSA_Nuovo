@@ -203,11 +203,26 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     }
   };
 
-    const oggiMese = new Date().toISOString().slice(0, 7);
+      const adesso0 = new Date();
+  const mesiOggi = adesso0.getFullYear() * 12 + adesso0.getMonth() + 1;
+  const MESI_AVVISO = 1;
+
+  const statoScad = (s: string) => {
+    const [a, m] = s.split('-');
+    const diff = parseInt(a, 10) * 12 + parseInt(m, 10) - mesiOggi;
+    if (diff < 0) return 'scaduta';
+    if (diff <= MESI_AVVISO) return 'in_scadenza';
+    return 'ok';
+  };
 
   const formattaScad = (s: string) => {
     const [a, m] = s.split('-');
-    return m + '/' + a;
+    return m + '/' + a.slice(2);
+  };
+
+  const scriviMeseAnno = (v: string) => {
+    const cifre = v.replace(/\D/g, '').slice(0, 4);
+    return cifre.length > 2 ? cifre.slice(0, 2) + '/' + cifre.slice(2) : cifre;
   };
 
   const apriScadenze = (r: Riga) => {
