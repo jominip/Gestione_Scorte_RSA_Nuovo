@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, ITEM_TYPES } from '@/lib/supabase';
 
 type Riga = {
   id: string;
@@ -11,7 +11,35 @@ type Riga = {
   updated_at: string;
 };
 
-export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
+type Props = {
+  medications: any[];
+  onAdd: (med: any) => Promise<void>;
+  onUpdate: (id: string, updates: any) => Promise<void>;
+  onBack: () => void;
+};
+
+const PIANI = [
+  { key: 'qty_pt', label: 'Piano Terra (PT)' },
+  { key: 'qty_1', label: 'Piano 1' },
+  { key: 'qty_2', label: 'Piano 2' },
+  { key: 'qty_3', label: 'Piano 3' },
+  { key: 'qty_pl', label: 'Palestra (PL)' },
+];
+
+const norm = (s?: string | null) => {
+  const t = (s || '').trim().toLowerCase();
+  return t === '—' ? '' : t;
+};
+
+const sbloccato = () => {
+  try {
+    return sessionStorage.getItem('rsa_unlocked') === '1';
+  } catch {
+    return false;
+  }
+};
+
+export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Props) {
   const [righe, setRighe] = useState<Riga[]>([]);
   const [errore, setErrore] = useState('');
   const [cerca, setCerca] = useState('');
@@ -19,10 +47,16 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
   const [nuovo, setNuovo] = useState({
     principio_attivo: '',
     dosaggio: '',
-    tipo: '',
+    tipo: 'Compresse',
     nome_commerciale: '',
     quantita: 0,
   });
+
+  const [trasferisci, setTrasferisci] = useState<Riga | null>(null);
+  const [piano, setPiano] = useState('qty_pt');
+  const [qta, setQta] = useState('1');
+  const [trErr, setTrErr] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const carica = async () => {
     const { data, error } = await supabase
@@ -47,17 +81,17 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
       return;
     }
     const { error } = await supabase.from('farmaci_non_in_uso').insert({
-      principio_attivo: nuovo.principio_attivo.trim().toUpperCase(),
+      principio_attivo: nuovo.principio_attivo.trim(),
       dosaggio: nuovo.dosaggio.trim() || null,
-      tipo: nuovo.tipo.trim() || null,
-      nome_commerciale: nuovo.nome_commerciale.trim().toUpperCase() || null,
+      tipo: nuovo.tipo || null,
+      nome_commerciale: nuovo.nome_commerciale.trim() || null,
       quantita: Number(nuovo.quantita) || 0,
     });
     if (error) {
       setErrore('Salvataggio NON riuscito: ' + error.message);
       return;
     }
-    setNuovo({ principio_attivo: '', dosaggio: '', tipo: '', nome_commerciale: '', quantita: 0 });
+    setNuovo({ principio_attivo: '', dosaggio: '', tipo: 'Compresse', nome_commerciale: '', quantita: 0 });
     setMostraForm(false);
     carica();
   };
@@ -86,6 +120,84 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
     carica();
   };
 
+  const apriTrasferimento = (r: Riga) => {
+    if (!sbloccato()) {
+      setErrore("Per trasferire serve il PIN: torna all'Armadio Farmacia, premi \"Sblocca Modifiche\" e riprova.");
+      return;
+    }
+    setErrore('');
+    setPiano('qty_pt');
+    setQta('1');
+    setTrErr('');
+    setTrasferisci(r);
+  };
+
+  const trovaInArmadio = (r: Riga) =>
+    medications.find(
+      (m) =>
+        m.category === 'farmaco' &&
+        norm(m.active_ingredient) === norm(r.principio_attivo) &&
+        norm(m.dosage) === norm(r.dosaggio) &&
+        norm(m.item_type) === norm(r.tipo)
+    );
+
+  const confermaTrasferimento = async () => {
+    if (!trasferisci) return;
+    const r = trasferisci;
+    const n = parseInt(qta, 10);
+    const pianoLabel = PIANI.find((p) => p.key === piano)?.label || '';
+
+    if (isNaN(n) || n < 1) { setTrErr('Scrivi una quantità di almeno 1.'); return; }
+    if (n > r.quantita) { setTrErr('In non in uso ci sono solo ' + r.quantita + ' scatole.'); return; }
+
+    try {
+      setSaving(true);
+      const adesso = new Date().toISOString();
+      const esistente = trovaInArmadio(r);
+
+      if (esistente) {
+        await onUpdate(esistente.id, {
+          [piano]: (esistente[piano] || 0) + n,
+          updated_at: adesso,
+        });
+      } else {
+        await onAdd({
+          active_ingredient: r.principio_attivo,
+          dosage: r.dosaggio || '',
+          item_type: r.tipo || 'Compresse',
+          commercial_name: r.nome_commerciale || '',
+          pack_size: 1,
+          qty_mc: 0,
+          qty_pt: piano === 'qty_pt' ? n : 0,
+          qty_1: piano === 'qty_1' ? n : 0,
+          qty_2: piano === 'qty_2' ? n : 0,
+          qty_3: piano === 'qty_3' ? n : 0,
+          qty_pl: piano === 'qty_pl' ? n : 0,
+          category: 'farmaco',
+          updated_at: adesso,
+        });
+      }
+
+      const { error } = await supabase
+        .from('farmaci_non_in_uso')
+        .update({ quantita: r.quantita - n, updated_at: adesso })
+        .eq('id', r.id);
+      if (error) {
+        setTrErr('Le scatole sono nell\'Armadio (' + pianoLabel + ') ma NON sono state tolte da qui: ' + error.message);
+        return;
+      }
+
+      setTrasferisci(null);
+      setTrErr('');
+      carica();
+    } catch (err) {
+      console.error('Errore trasferimento verso armadio:', err);
+      setTrErr('Trasferimento non riuscito. Controlla le quantità prima di riprovare.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const visibili = righe.filter((r) => {
     const t = cerca.trim().toLowerCase();
     if (!t) return true;
@@ -97,8 +209,11 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
 
   const formatta = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' }) +
-      ', ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    return (
+      d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' }) +
+      ', ' +
+      d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+    );
   };
 
   return (
@@ -140,12 +255,15 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
             value={nuovo.dosaggio}
             onChange={(e) => setNuovo({ ...nuovo, dosaggio: e.target.value })}
           />
-          <input
+          <select
             className="border rounded px-2 py-2 text-sm"
-            placeholder="Tipo (es. Compresse)"
             value={nuovo.tipo}
             onChange={(e) => setNuovo({ ...nuovo, tipo: e.target.value })}
-          />
+          >
+            {ITEM_TYPES.map((t: string) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
           <input
             className="border rounded px-2 py-2 text-sm"
             placeholder="Nome commerciale"
@@ -226,7 +344,14 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
                   </div>
                 </td>
                 <td className="p-3 text-xs text-gray-500">{formatta(r.updated_at)}</td>
-                <td className="p-3 text-center">
+                <td className="p-3 text-center whitespace-nowrap">
+                  <button
+                    onClick={() => apriTrasferimento(r)}
+                    className="mr-2 text-gray-400 hover:text-teal-700"
+                    title="Trasferisci nell'Armadio Farmacia"
+                  >
+                    ⇄
+                  </button>
                   <button onClick={() => elimina(r)} className="text-gray-400 hover:text-red-600" title="Elimina">
                     🗑
                   </button>
@@ -236,6 +361,61 @@ export default function NonInUsoTab({ onBack }: { onBack: () => void }) {
           </tbody>
         </table>
       </div>
+
+      {trasferisci && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Trasferisci nell'Armadio Farmacia</h3>
+              <button onClick={() => setTrasferisci(null)} className="text-slate-400 hover:text-slate-600">
+                ✕
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              {trasferisci.principio_attivo} {trasferisci.dosaggio || ''}
+            </p>
+            <p className="text-xs text-slate-600">In non in uso: {trasferisci.quantita} scatole</p>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">In quale piano</label>
+              <select
+                value={piano}
+                onChange={(e) => { setPiano(e.target.value); setTrErr(''); }}
+                className="border rounded px-2 py-2 text-sm w-full"
+              >
+                {PIANI.map((p) => (
+                  <option key={p.key} value={p.key}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Quante scatole</label>
+              <input
+                type="number"
+                min={1}
+                value={qta}
+                onChange={(e) => { setQta(e.target.value); setTrErr(''); }}
+                className="border rounded px-2 py-2 text-sm w-full"
+              />
+            </div>
+            {trErr && <p className="text-xs font-semibold text-red-600">{trErr}</p>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setTrasferisci(null)}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confermaTrasferimento}
+                disabled={saving}
+                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-sm font-medium"
+              >
+                {saving ? 'Salvataggio...' : 'Trasferisci'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
