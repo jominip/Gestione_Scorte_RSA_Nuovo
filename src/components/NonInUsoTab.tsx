@@ -104,19 +104,20 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
       setErrore('Scrivi il principio attivo.');
       return;
     }
-    const { error } = await supabase.from('farmaci_non_in_uso').insert({
-      principio_attivo: nuovo.principio_attivo.trim(),
-      dosaggio: nuovo.dosaggio.trim() || null,
-      tipo: nuovo.tipo || null,
-      nome_commerciale: nuovo.nome_commerciale.trim() || null,
-      quantita: Number(nuovo.quantita) || 0,
-    });
+        const { data, error } = await supabase
+      .from('farmaci_non_in_uso')
+      .delete()
+      .eq('id', r.id)
+      .select();
     if (error) {
-      setErrore('Salvataggio NON riuscito: ' + error.message);
+      setErrore('Eliminazione NON riuscita: ' + error.message);
       return;
     }
-    setNuovo({ principio_attivo: '', dosaggio: '', tipo: 'Compresse', nome_commerciale: '', quantita: 0 });
-    setMostraForm(false);
+    if (!data || data.length === 0) {
+      setErrore('Eliminazione NON riuscita: il database non ha cancellato la riga (permessi). Controlla in Supabase che RLS sia disattivata su farmaci_non_in_uso.');
+      return;
+    }
+    setErrore('');
     carica();
   };
 
