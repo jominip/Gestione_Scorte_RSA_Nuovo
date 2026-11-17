@@ -240,7 +240,54 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     return cifre.length > 2 ? cifre.slice(0, 2) + '/' + cifre.slice(2) : cifre;
   };
 
-    const apriModifica = (r: Riga) => {
+      const apriPiu = (r: Riga) => {
+    const lista = [...(r.scadenze || [])].sort((a, b) => a.data.localeCompare(b.data));
+    setPiuScelta(lista.length > 0 ? lista[0].data : 'nuova');
+    setPiuData('');
+    setPiuErr('');
+    setPiuRiga(r);
+  };
+
+  const confermaPiu = async () => {
+    if (!piuRiga) return;
+    const lista = (piuRiga.scadenze || []).map((s) => ({ ...s }));
+
+    if (piuScelta === 'nuova') {
+      const m = piuData.match(/^(\d{2})\/(\d{2})$/);
+      const mese = m ? parseInt(m[1], 10) : 0;
+      if (!m || mese < 1 || mese > 12) {
+        setPiuErr('Scrivi la scadenza come MM/AA, per esempio 03/27.');
+        return;
+      }
+      const chiave = '20' + m[2] + '-' + m[1];
+      const esiste = lista.find((s) => s.data === chiave);
+      if (esiste) esiste.qta += 1;
+      else lista.push({ data: chiave, qta: 1 });
+    } else if (piuScelta !== 'senza') {
+      const esiste = lista.find((s) => s.data === piuScelta);
+      if (esiste) esiste.qta += 1;
+    }
+
+    lista.sort((a, b) => a.data.localeCompare(b.data));
+
+    const { error } = await supabase
+      .from('farmaci_non_in_uso')
+      .update({
+        quantita: piuRiga.quantita + 1,
+        scadenze: lista,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', piuRiga.id);
+    if (error) {
+      setPiuErr('Salvataggio NON riuscito: ' + error.message);
+      return;
+    }
+    setPiuRiga(null);
+    setPiuErr('');
+    carica();
+  };
+
+  const apriModifica = (r: Riga) => {
     setModForm({
       principio_attivo: r.principio_attivo || '',
       dosaggio: r.dosaggio || '',
