@@ -137,7 +137,9 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
   };
 
   const elimina = async (r: Riga) => {
-    if (!window.confirm('Eliminare ' + r.principio_attivo + ' ' + (r.dosaggio || '') + '?')) return;
+                      <button onClick={() => elimina(r)} className="text-gray-400 hover:text-red-600" title="Elimina">
+                    🗑
+                  </button>
     const { error } = await supabase.from('farmaci_non_in_uso').delete().eq('id', r.id);
     if (error) {
       setErrore('Eliminazione NON riuscita: ' + error.message);
