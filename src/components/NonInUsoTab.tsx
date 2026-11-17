@@ -167,7 +167,31 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     setErrore('');
     carica();
   };
-
+  const elimina = async (r: Riga) => {
+    try {
+      const { data, error } = await supabase
+        .from('farmaci_non_in_uso')
+        .delete()
+        .eq('id', r.id)
+        .select();
+      if (error) {
+        setErrore('Eliminazione NON riuscita: ' + error.message);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (!data || data.length === 0) {
+        setErrore('Eliminazione NON riuscita: il database non ha cancellato la riga (permessi). Controlla in Supabase che RLS sia disattivata su farmaci_non_in_uso.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      setErrore('');
+      setConfermaId(null);
+      carica();
+    } catch (err: any) {
+      setErrore('Eliminazione NON riuscita: ' + (err?.message || 'errore sconosciuto'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
   
 
   const apriTrasferimento = (r: Riga) => {
