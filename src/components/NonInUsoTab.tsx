@@ -8,7 +8,8 @@ type Riga = {
   tipo: string | null;
   nome_commerciale: string | null;
   quantita: number;
-  updated_at: string;
+    updated_at: string;
+  scadenze: { data: string; qta: number }[] | null;
 };
 
 type Props = {
