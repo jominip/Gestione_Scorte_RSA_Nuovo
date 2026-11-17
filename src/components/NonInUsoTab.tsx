@@ -516,7 +516,54 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
             value={nuovo.quantita}
             onChange={(e) => setNuovo({ ...nuovo, quantita: Number(e.target.value) })}
           />
-                    {formErr && (
+                              <div className="col-span-2 md:col-span-5 space-y-2">
+            <p className="text-xs font-semibold text-slate-700">Scadenze (facoltative)</p>
+            {nuoveScad.map((s, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="MM/AA"
+                  maxLength={5}
+                  value={s.data}
+                  onChange={(e) => {
+                    const copia = [...nuoveScad];
+                    copia[i] = { ...copia[i], data: scriviMeseAnno(e.target.value) };
+                    setNuoveScad(copia);
+                    setFormErr('');
+                  }}
+                  className="border rounded px-2 py-2 text-sm w-24"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  value={s.qta}
+                  onChange={(e) => {
+                    const copia = [...nuoveScad];
+                    copia[i] = { ...copia[i], qta: e.target.value };
+                    setNuoveScad(copia);
+                    setFormErr('');
+                  }}
+                  className="border rounded px-2 py-2 text-sm w-16"
+                />
+                <span className="text-xs text-gray-500">scatole</span>
+                <button
+                  onClick={() => setNuoveScad(nuoveScad.filter((_, k) => k !== i))}
+                  className="text-gray-400 hover:text-red-600"
+                  title="Togli scadenza"
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => setNuoveScad([...nuoveScad, { data: '', qta: '1' }])}
+              className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+            >
+              + Aggiungi scadenza
+            </button>
+          </div>
+          {formErr && (
             <p className="col-span-2 md:col-span-5 text-sm font-semibold text-red-600">{formErr}</p>
           )}
           <div className="col-span-2 md:col-span-5 flex gap-2">
