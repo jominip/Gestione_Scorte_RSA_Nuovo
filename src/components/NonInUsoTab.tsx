@@ -159,15 +159,7 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     carica();
   };
 
-  const elimina = async (r: Riga) => {
-    
-    const { error } = await supabase.from('farmaci_non_in_uso').delete().eq('id', r.id);
-    if (error) {
-      setErrore('Eliminazione NON riuscita: ' + error.message);
-      return;
-    }
-    carica();
-  };
+  
 
   const apriTrasferimento = (r: Riga) => {
     if (!sbloccato()) {
