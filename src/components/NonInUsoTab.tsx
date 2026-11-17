@@ -137,9 +137,7 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
   };
 
   const elimina = async (r: Riga) => {
-                      <button onClick={() => elimina(r)} className="text-gray-400 hover:text-red-600" title="Elimina">
-                    🗑
-                  </button>
+    
     const { error } = await supabase.from('farmaci_non_in_uso').delete().eq('id', r.id);
     if (error) {
       setErrore('Eliminazione NON riuscita: ' + error.message);
@@ -605,9 +603,34 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
                   >
                     ⇄
                   </button>
-                  <button onClick={() => elimina(r)} className="text-gray-400 hover:text-red-600" title="Elimina">
-                    🗑
-                  </button>
+                                   {confermaId === r.id ? (
+                    <span className="inline-flex items-center gap-1 text-xs">
+                      <span className="font-semibold text-red-600">Eliminare?</span>
+                      <button
+                        onClick={async () => {
+                          await elimina(r);
+                          setConfermaId(null);
+                        }}
+                        className="px-2 py-1 rounded bg-red-600 text-white font-medium"
+                      >
+                        Sì
+                      </button>
+                      <button
+                        onClick={() => setConfermaId(null)}
+                        className="px-2 py-1 rounded border border-gray-300 bg-white"
+                      >
+                        No
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfermaId(r.id)}
+                      className="text-gray-400 hover:text-red-600"
+                      title="Elimina"
+                    >
+                      🗑
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
