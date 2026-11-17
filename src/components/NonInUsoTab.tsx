@@ -472,12 +472,15 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
               )}
               {scadLista.map((s, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input
-                    type="month"
+                                    <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="MM/AA"
+                    maxLength={5}
                     value={s.data}
                     onChange={(e) => {
                       const copia = [...scadLista];
-                      copia[i] = { ...copia[i], data: e.target.value };
+                      copia[i] = { ...copia[i], data: scriviMeseAnno(e.target.value) };
                       setScadLista(copia);
                       setScadErr('');
                     }}
