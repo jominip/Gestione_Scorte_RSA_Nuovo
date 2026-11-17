@@ -568,7 +568,87 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
         </table>
       </div>
 
-            {modRiga && (
+                 {piuRiga && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-3 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Aggiungi una scatola</h3>
+              <button onClick={() => setPiuRiga(null)} className="text-slate-400 hover:text-slate-600">
+                ✕
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-slate-800">
+              {piuRiga.principio_attivo} {piuRiga.dosaggio || ''}
+            </p>
+            <p className="text-xs text-slate-600">Scegli la scadenza della scatola:</p>
+
+            {[...(piuRiga.scadenze || [])]
+              .sort((a, b) => a.data.localeCompare(b.data))
+              .map((s) => (
+                <label key={s.data} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="piu"
+                    checked={piuScelta === s.data}
+                    onChange={() => { setPiuScelta(s.data); setPiuErr(''); }}
+                  />
+                  <span>
+                    {formattaScad(s.data)} <span className="text-gray-500">(già {s.qta} scat.)</span>
+                  </span>
+                </label>
+              ))}
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="piu"
+                checked={piuScelta === 'nuova'}
+                onChange={() => { setPiuScelta('nuova'); setPiuErr(''); }}
+              />
+              <span>Nuova scadenza</span>
+              {piuScelta === 'nuova' && (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="MM/AA"
+                  maxLength={5}
+                  value={piuData}
+                  onChange={(e) => { setPiuData(scriviMeseAnno(e.target.value)); setPiuErr(''); }}
+                  className="border rounded px-2 py-1 text-sm w-20"
+                />
+              )}
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="piu"
+                checked={piuScelta === 'senza'}
+                onChange={() => { setPiuScelta('senza'); setPiuErr(''); }}
+              />
+              <span>Senza scadenza</span>
+            </label>
+
+            {piuErr && <p className="text-xs font-semibold text-red-600">{piuErr}</p>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setPiuRiga(null)}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confermaPiu}
+                className="px-4 py-2 rounded-lg bg-teal-700 text-white text-sm font-medium"
+              >
+                Aggiungi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modRiga && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-3 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
