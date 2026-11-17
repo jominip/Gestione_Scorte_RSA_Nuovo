@@ -101,9 +101,10 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
     carica();
   }, []);
 
-  const aggiungi = async () => {
+    const aggiungi = async () => {
+    setFormErr('');
     if (!nuovo.principio_attivo.trim()) {
-      setErrore('Scrivi il principio attivo.');
+      setFormErr('Scrivi il principio attivo.');
       return;
     }
         const { data, error } = await supabase
