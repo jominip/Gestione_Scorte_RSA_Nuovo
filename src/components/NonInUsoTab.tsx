@@ -385,6 +385,22 @@ export default function NonInUsoTab({ medications, onAdd, onUpdate, onBack }: Pr
                     </button>
                   </div>
                 </td>
+                                <td className="p-3 text-xs">
+                  {(r.scadenze || []).length === 0 ? (
+                    <span className="text-gray-400">—</span>
+                  ) : (
+                    [...(r.scadenze || [])]
+                      .sort((a, b) => a.data.localeCompare(b.data))
+                      .map((s, i) => (
+                        <div
+                          key={i}
+                          className={s.data < oggiMese ? 'text-red-600 font-semibold' : 'text-gray-700'}
+                        >
+                          {formattaScad(s.data)} · {s.qta} scat.
+                        </div>
+                      ))
+                  )}
+                </td>
                 <td className="p-3 text-xs text-gray-500">{formatta(r.updated_at)}</td>
                 <td className="p-3 text-center whitespace-nowrap">
                   <button
